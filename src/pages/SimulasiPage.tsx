@@ -238,6 +238,7 @@ export default function SimulasiPage() {
                       }}
                     >
                       <tbody>
+                        {/* ── Umur & Populasi ── */}
                         <tr>
                           <td
                             className="metric-name"
@@ -277,47 +278,70 @@ export default function SimulasiPage() {
                             {output.durasiAktual} Hari
                           </td>
                         </tr>
+
+                        {/* ── Kelompok Yield ── */}
+                        <tr style={{ background: "rgba(0,0,0,0.03)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Yield / Hasil
+                          </td>
+                        </tr>
                         <tr>
                           <td
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Estimasi Yield
+                            Hasil Gabah
                           </td>
                           <td
                             style={{ padding: "8px 10px", textAlign: "right" }}
                           >
-                            {output.currentYield} kg/a
+                            {(output.currentYield * 10).toFixed(1)} kg/a
                           </td>
                         </tr>
-                        <tr style={{ background: "rgba(0,0,0,0.02)" }}>
+                        <tr>
                           <td
                             className="metric-name"
-                            style={{ padding: "8px 10px", fontWeight: 700 }}
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
+                            Beras
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.berasYield.toFixed(1)} kg/a
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Hasil Bebek
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.duckYield.toFixed(2)} kg/ekor
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Profit Bersih ── */}
+                        <tr style={{ background: "rgba(0,0,0,0.03)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                             Profit Bersih
                           </td>
-                          <td
-                            style={{
-                              padding: "8px 10px",
-                              textAlign: "right",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {output.profitFormatted}
-                          </td>
                         </tr>
                         <tr>
                           <td
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Penghematan Pupuk
+                            Gabah
                           </td>
                           <td
                             style={{ padding: "8px 10px", textAlign: "right" }}
                           >
-                            {output.hematPupukAktual}%
+                            {output.profitGabahFormatted}
                           </td>
                         </tr>
                         <tr>
@@ -325,12 +349,12 @@ export default function SimulasiPage() {
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Penghematan Gulma
+                            Bebek
                           </td>
                           <td
                             style={{ padding: "8px 10px", textAlign: "right" }}
                           >
-                            {output.hematGulmaAktual}%
+                            {output.profitBebekFormatted}
                           </td>
                         </tr>
                         <tr>
@@ -338,21 +362,111 @@ export default function SimulasiPage() {
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
+                            Beras
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.profitBerasFormatted}
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Gulma ── */}
+                        <tr style={{ background: "rgba(0,0,0,0.03)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Gulma
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan Pencabut Gulma
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.savingGulmaHariActual}
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Pupuk ── */}
+                        <tr style={{ background: "rgba(0,0,0,0.03)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Pupuk (Penghematan)
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan N
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.hematN_Actual} kg
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan P
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.hematP_Actual} kg
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan K
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.hematK_Actual} kg
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Dampak Lingkungan ── */}
+                        <tr style={{ background: "rgba(0,0,0,0.03)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                             Dampak Lingkungan
                           </td>
+                        </tr>
+                        <tr>
                           <td
-                            style={{
-                              padding: "8px 10px",
-                              textAlign: "right",
-                              fontWeight: 600,
-                              color:
-                                output.sustainabilityScore >= 80
-                                  ? "var(--green-600)"
-                                  : "var(--accent-red)",
-                            }}
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            {output.dampakLingkunganAktual} (
-                            {output.sustainabilityScore}/100)
+                            Emisi CO2
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.emisiCO2_Actual} ton CO2e
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Emisi Metana (CH4)
+                          </td>
+                          <td
+                            style={{ padding: "8px 10px", textAlign: "right" }}
+                          >
+                            {output.emisiCH4_Actual} kg CH4
                           </td>
                         </tr>
                       </tbody>
@@ -420,6 +534,7 @@ export default function SimulasiPage() {
                       }}
                     >
                       <tbody>
+                        {/* ── Umur & Populasi ── */}
                         <tr>
                           <td
                             className="metric-name"
@@ -474,12 +589,19 @@ export default function SimulasiPage() {
                             {output.durasiRekomendasi} Hari
                           </td>
                         </tr>
+
+                        {/* ── Kelompok Yield ── */}
+                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--green-700)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Yield / Hasil
+                          </td>
+                        </tr>
                         <tr>
                           <td
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Estimasi Yield
+                            Hasil Gabah
                           </td>
                           <td
                             style={{
@@ -489,47 +611,58 @@ export default function SimulasiPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {output.optimalYield} kg/a
+                            {(output.optimalYield * 10).toFixed(1)} kg/a
                           </td>
                         </tr>
-                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                        <tr>
                           <td
                             className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Beras
+                          </td>
+                          <td
                             style={{
                               padding: "8px 10px",
-                              fontWeight: 700,
-                              color: "var(--green-700)",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
                             }}
                           >
+                            {output.optimalBerasYield.toFixed(1)} kg/a
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Hasil Bebek
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.optimalDuckYield.toFixed(2)} kg/ekor
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Profit Bersih ── */}
+                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--green-700)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                             Profit Bersih
                           </td>
-                          <td
-                            style={{
-                              padding: "8px 10px",
-                              textAlign: "right",
-                              fontWeight: 800,
-                              color: "var(--green-600)",
-                            }}
-                          >
-                            <div>{output.optProfitFormatted}</div>
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "var(--green-600)",
-                                fontWeight: 700,
-                                marginTop: "2px",
-                              }}
-                            >
-                              Selisih: +{output.selisihProfitFormatted}
-                            </div>
-                          </td>
                         </tr>
                         <tr>
                           <td
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Penghematan Pupuk
+                            Gabah
                           </td>
                           <td
                             style={{
@@ -539,7 +672,7 @@ export default function SimulasiPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {output.hematPupukRekomendasi}%
+                            {output.optProfitGabahFormatted}
                           </td>
                         </tr>
                         <tr>
@@ -547,7 +680,7 @@ export default function SimulasiPage() {
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
-                            Penghematan Gulma
+                            Bebek
                           </td>
                           <td
                             style={{
@@ -557,7 +690,7 @@ export default function SimulasiPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {output.hematGulmaRekomendasi}%
+                            {output.optProfitBebekFormatted}
                           </td>
                         </tr>
                         <tr>
@@ -565,17 +698,146 @@ export default function SimulasiPage() {
                             className="metric-name"
                             style={{ padding: "8px 10px", fontWeight: 600 }}
                           >
+                            Beras
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.optProfitBerasFormatted}
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Gulma ── */}
+                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--green-700)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Gulma
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan Pencabut Gulma
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.savingGulmaHariOptimal}
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Pupuk ── */}
+                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--green-700)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Pupuk (Penghematan)
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan N
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.hematN_Optimal} kg
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan P
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.hematP_Optimal} kg
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Penghematan K
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.hematK_Optimal} kg
+                          </td>
+                        </tr>
+
+                        {/* ── Kelompok Dampak Lingkungan ── */}
+                        <tr style={{ background: "rgba(34,197,94,0.06)" }}>
+                          <td colSpan={2} style={{ padding: "6px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--green-700)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                             Dampak Lingkungan
                           </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Emisi CO2
+                          </td>
                           <td
                             style={{
                               padding: "8px 10px",
                               textAlign: "right",
-                              fontWeight: 700,
                               color: "var(--green-600)",
+                              fontWeight: 600,
                             }}
                           >
-                            Sangat Baik (A+) (100/100)
+                            {output.emisiCO2_Optimal} ton CO2e
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            className="metric-name"
+                            style={{ padding: "8px 10px", fontWeight: 600 }}
+                          >
+                            Emisi Metana (CH4)
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 10px",
+                              textAlign: "right",
+                              color: "var(--green-600)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {output.emisiCH4_Optimal} kg CH4
                           </td>
                         </tr>
                       </tbody>

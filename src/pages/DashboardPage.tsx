@@ -194,42 +194,219 @@ export default function DashboardPage({
             </div>
           </div>
           <div className="card-body">
+            {/* Stress indicator based on moisture and water level */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "rgba(22,101,52,0.04)",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-sm)",
+                marginBottom: 14,
+                border: "1px solid rgba(22,101,52,0.1)",
+                fontSize: "12px",
+              }}
+            >
+              <div>
+                <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Growth Factor:</span>{" "}
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color: actualMultiplier >= 1.0 ? "var(--green-600)" : "var(--accent-amber)",
+                  }}
+                >
+                  {(actualMultiplier * 100).toFixed(0)}%
+                </span>
+                {moistureFactor < 1.0 && (
+                  <span style={{ color: "var(--text-muted)", marginLeft: 6 }}>
+                    (Moisture Stress: -{((1 - moistureFactor) * 100).toFixed(0)}%)
+                  </span>
+                )}
+                {waterFactor < 1.0 && (
+                  <span style={{ color: "var(--text-muted)", marginLeft: 6 }}>
+                    (Water Stress: -{((1 - waterFactor) * 100).toFixed(0)}%)
+                  </span>
+                )}
+                {moistureFactor === 1.0 && waterFactor === 1.0 && (
+                  <span style={{ color: "var(--green-600)", marginLeft: 6 }}>
+                    (Soil conditions optimal!)
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="chart-legend">
               <div className="legend-item">
                 <div
                   className="legend-dot"
-                  style={{ background: "var(--green-500)" }}
+                  style={{ background: "linear-gradient(180deg, var(--green-400), var(--green-600))" }}
                 />
                 Actual Growth (cm)
               </div>
               <div className="legend-item">
                 <div
                   className="legend-dot"
-                  style={{ background: "rgba(34,197,94,0.2)" }}
+                  style={{ background: "rgba(209,250,229,0.7)", border: "1px dashed var(--green-400)" }}
                 />
-                Optimal Subak Baseline
+                Optimal Baseline (cm)
               </div>
             </div>
-            <div className="bar-chart-wrap">
-              {BAR_DATA.map((d) => (
-                <div key={d.label} className="bar-group">
-                  <div
-                    className="bar bar-optimal"
-                    style={{ height: `${d.optimal}%` }}
-                  />
-                  <div
-                    className="bar bar-actual"
-                    style={{ height: `${d.actual}%` }}
-                  />
+
+            <div style={{ display: "flex", position: "relative", height: "185px", marginTop: 15 }}>
+              {/* Y Axis */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  fontSize: 10,
+                  color: "var(--text-muted)",
+                  width: 35,
+                  paddingBottom: 20,
+                  textAlign: "right",
+                  paddingRight: 8,
+                  boxSizing: "border-box",
+                }}
+              >
+                <span>100cm</span>
+                <span>75cm</span>
+                <span>50cm</span>
+                <span>25cm</span>
+                <span>0cm</span>
+              </div>
+
+              {/* Chart Plot Area */}
+              <div style={{ flex: 1, position: "relative", height: "100%" }}>
+                {/* Horizontal Gridlines */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: "0 0 20px 0",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <div style={{ borderBottom: "1px dashed rgba(0,0,0,0.06)", height: 0 }} />
+                  <div style={{ borderBottom: "1px dashed rgba(0,0,0,0.06)", height: 0 }} />
+                  <div style={{ borderBottom: "1px dashed rgba(0,0,0,0.06)", height: 0 }} />
+                  <div style={{ borderBottom: "1px dashed rgba(0,0,0,0.06)", height: 0 }} />
+                  <div style={{ borderBottom: "1px solid rgba(0,0,0,0.15)", height: 0 }} />
                 </div>
-              ))}
-            </div>
-            <div className="bar-labels">
-              {BAR_DATA.map((d) => (
-                <div key={d.label} className="bar-label">
-                  {d.label}
+
+                {/* Bars */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: "0 0 20px 0",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: 12,
+                    padding: "0 8px",
+                  }}
+                >
+                  {BAR_DATA.map((d) => (
+                    <div
+                      key={d.label}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "flex-end",
+                        height: "100%",
+                        position: "relative",
+                        gap: 4,
+                      }}
+                    >
+                      {/* Optimal bar */}
+                      <div
+                        style={{
+                          flex: 1,
+                          height: `${d.optimal}%`,
+                          background: "rgba(209,250,229,0.4)",
+                          border: "1.5px dashed var(--green-400)",
+                          borderRadius: "4px 4px 0 0",
+                          position: "relative",
+                          display: "flex",
+                          justifyContent: "center",
+                          transition: "height 0.4s ease",
+                        }}
+                        title={`Optimal: ${d.optimal} cm`}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: -16,
+                            fontSize: 9,
+                            fontWeight: 600,
+                            color: "var(--green-700)",
+                          }}
+                        >
+                          {d.optimal}
+                        </span>
+                      </div>
+
+                      {/* Actual bar */}
+                      <div
+                        style={{
+                          flex: 1,
+                          height: `${d.actual}%`,
+                          background: "linear-gradient(180deg, var(--green-400), var(--green-600))",
+                          borderRadius: "4px 4px 0 0",
+                          boxShadow: "0 2px 5px rgba(22,128,58,0.15)",
+                          position: "relative",
+                          display: "flex",
+                          justifyContent: "center",
+                          transition: "height 0.4s ease",
+                        }}
+                        title={`Actual: ${d.actual} cm`}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: -16,
+                            fontSize: 9,
+                            fontWeight: 700,
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {d.actual}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+
+                {/* X Axis Labels */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 20,
+                    display: "flex",
+                    padding: "0 8px",
+                  }}
+                >
+                  {BAR_DATA.map((d) => (
+                    <div
+                      key={d.label}
+                      style={{
+                        flex: 1,
+                        textAlign: "center",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: "var(--text-secondary)",
+                        paddingTop: 4,
+                      }}
+                    >
+                      {d.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

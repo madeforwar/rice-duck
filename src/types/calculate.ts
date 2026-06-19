@@ -40,7 +40,7 @@ export function calculate(input: SimInput): SimOutput {
     ? 1.08
     : 0.95;
 
-  const currentYield = +(base * sysFactor * areaFactor * (densityPerHa > 200 ? 0.88 : 0.94)).toFixed(1);
+  const currentYield = +(base * sysFactor * areaFactor * duckFactor).toFixed(1);
   const optimalYield = +(base * sysFactor * areaFactor * 1.08).toFixed(1);
 
   const densityStatus = densityPerHa > 180 ? 'danger' : densityPerHa < 50 ? 'warning' : 'ok';
@@ -54,21 +54,24 @@ export function calculate(input: SimInput): SimOutput {
     60 + (duckFactor - 0.9) * 200 + (sysFactor - 1) * 60 - agePenalty
   )));
 
-  const biayaPupuk = densityPerHa > 100 ? -0.8 : -1.45;
+  const biayaPupuk = densityPerHa >= 60 ? -0.8 : -1.45;
   const optBiayaPupuk = -0.8;
   const revenue = +(currentYield * input.lahanLuas * 5.2).toFixed(1);
   const optRevenue = +(optimalYield * input.lahanLuas * 5.2).toFixed(1);
-  const profit = +(revenue * 0.72).toFixed(1);
+  
+  const actualProfitMargin = densityPerHa >= 60 && densityPerHa <= 120 ? 0.78 : 0.72;
+  const profit = +(revenue * actualProfitMargin).toFixed(1);
   const optProfit = +(optRevenue * 0.78).toFixed(1);
 
+  const isOptimalBebek = densityPerHa >= 60 && densityPerHa <= 120 && input.umurBebek >= 14 && input.umurBebek <= 28;
   const durasiRekomendasi = 60;
-  const durasiAktual = Math.max(30, Math.min(75, 80 - input.umurBebek));
+  const durasiAktual = isOptimalBebek ? 60 : Math.max(30, Math.min(75, 80 - input.umurBebek));
 
   const hematPupukRekomendasi = 50;
-  const hematPupukAktual = densityPerHa >= 60 && densityPerHa <= 120 ? 45 : densityPerHa < 50 ? 15 : densityPerHa > 180 ? 25 : 35;
+  const hematPupukAktual = densityPerHa >= 75 && densityPerHa <= 90 ? 50 : densityPerHa >= 60 && densityPerHa <= 120 ? 45 : densityPerHa < 50 ? 15 : densityPerHa > 180 ? 25 : 35;
 
   const hematGulmaRekomendasi = 80;
-  const hematGulmaAktual = densityPerHa >= 60 && densityPerHa <= 120 ? 75 : densityPerHa < 50 ? 30 : densityPerHa > 180 ? 85 : 55;
+  const hematGulmaAktual = densityPerHa >= 75 && densityPerHa <= 90 ? 80 : densityPerHa >= 60 && densityPerHa <= 120 ? 75 : densityPerHa < 50 ? 30 : densityPerHa > 180 ? 85 : 55;
 
   const dampakLingkunganAktual = sustainabilityScore >= 85 ? 'Sangat Baik (A)' : sustainabilityScore >= 70 ? 'Baik (B+)' : sustainabilityScore >= 55 ? 'Cukup (B)' : 'Kurang (C)';
 
@@ -78,21 +81,22 @@ export function calculate(input: SimInput): SimOutput {
 
   // Duck weight growth: base 0.5kg + age*0.02 + duration*0.015, capped between 1.0 - 2.2 kg
   const densityPenalty = densityPerHa > 150 ? -0.15 : densityPerHa < 40 ? 0.05 : 0;
-  const duckYield = +(Math.max(1.0, Math.min(2.2, 0.5 + (input.umurBebek * 0.02) + (durasiAktual * 0.015) + densityPenalty))).toFixed(2);
   const optimalDuckYield = +(Math.max(1.0, Math.min(2.2, 0.5 + (21 * 0.02) + (durasiRekomendasi * 0.015)))).toFixed(2);
+  const duckYield = isOptimalBebek ? optimalDuckYield : +(Math.max(1.0, Math.min(2.2, 0.5 + (input.umurBebek * 0.02) + (durasiAktual * 0.015) + densityPenalty))).toFixed(2);
 
   // Detailed profit calculations
   const profitGabah = profit;
   const optProfitGabah = optProfit;
 
   // beras price is 12.0 (millions/unit), profit margin is 70% for actual, 76% for optimal
-  const profitBeras = +(currentYield * input.lahanLuas * 0.6 * 12.0 * 0.70).toFixed(1);
+  const actualBerasMargin = densityPerHa >= 60 && densityPerHa <= 120 ? 0.76 : 0.70;
+  const profitBeras = +(currentYield * input.lahanLuas * 0.6 * 12.0 * actualBerasMargin).toFixed(1);
   const optProfitBeras = +(optimalYield * input.lahanLuas * 0.6 * 12.0 * 0.76).toFixed(1);
 
   // duck price is 0.04 (40,000 IDR/kg), cost is 0.015 (15,000 IDR/duckling + feed)
-  const profitBebek = +(input.jumlahBebek * (duckYield * 0.04 - 0.015)).toFixed(1);
+  const profitBebek = +(input.jumlahBebek * (Number(duckYield) * 0.04 - 0.015)).toFixed(1);
   const optJumlahBebek = Math.round(80 * input.lahanLuas);
-  const optProfitBebek = +(optJumlahBebek * (optimalDuckYield * 0.04 - 0.015)).toFixed(1);
+  const optProfitBebek = +(optJumlahBebek * (Number(optimalDuckYield) * 0.04 - 0.015)).toFixed(1);
 
   const profitGabahFormatted = formatRupiah(profitGabah);
   const optProfitGabahFormatted = formatRupiah(optProfitGabah);
