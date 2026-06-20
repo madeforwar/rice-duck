@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Page, SimInput, SimOutput } from "../types";
 import "../styles/dashboard.css";
 
@@ -39,6 +39,15 @@ export default function DashboardPage({
   const [tempWaterLevel, setTempWaterLevel] =
     useState<number>(loggedWaterLevel);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [viewScope, setViewScope] = useState<"weekly" | "monthly">("weekly");
+
+  useEffect(() => {
+    setTempMoisture(loggedMoisture);
+  }, [loggedMoisture]);
+
+  useEffect(() => {
+    setTempWaterLevel(loggedWaterLevel);
+  }, [loggedWaterLevel]);
 
   const handleLogData = () => {
     setLoggedMoisture(tempMoisture);
@@ -52,13 +61,20 @@ export default function DashboardPage({
   };
 
   // Calculate dynamic growth heights based on simulated variety, system, duck density, and logged observations
-  const stages = [
-    { wk: "Wk-2", baseOpt: 25 },
-    { wk: "Wk-4", baseOpt: 45 },
-    { wk: "Wk-6", baseOpt: 65 },
-    { wk: "Wk-8", baseOpt: 85 },
-    { wk: "Wk-10", baseOpt: 95 },
-  ];
+  const stages =
+    viewScope === "weekly"
+      ? [
+          { wk: "Wk-2", baseOpt: 25 },
+          { wk: "Wk-4", baseOpt: 45 },
+          { wk: "Wk-6", baseOpt: 65 },
+          { wk: "Wk-8", baseOpt: 85 },
+          { wk: "Wk-10", baseOpt: 95 },
+        ]
+      : [
+          { wk: "Bln-1", baseOpt: 35 },
+          { wk: "Bln-2", baseOpt: 75 },
+          { wk: "Bln-3", baseOpt: 98 },
+        ];
 
   // Variety factor:
   const varFactor =
@@ -163,29 +179,32 @@ export default function DashboardPage({
             <span className="card-title">🌾 Rice Growth Analysis</span>
             <div style={{ display: "flex", gap: 6 }}>
               <button
+                onClick={() => setViewScope("weekly")}
                 style={{
                   fontSize: 11,
                   padding: "4px 10px",
                   borderRadius: 99,
                   cursor: "pointer",
-                  background: "transparent",
-                  border: "1px solid var(--surface-border)",
-                  color: "var(--text-muted)",
+                  background: viewScope === "weekly" ? "var(--green-600)" : "transparent",
+                  border: viewScope === "weekly" ? "none" : "1px solid var(--surface-border)",
+                  color: viewScope === "weekly" ? "white" : "var(--text-muted)",
+                  fontWeight: viewScope === "weekly" ? 700 : 500,
                   fontFamily: "var(--font-body)",
                 }}
               >
                 Weekly
               </button>
               <button
+                onClick={() => setViewScope("monthly")}
                 style={{
                   fontSize: 11,
                   padding: "4px 10px",
                   borderRadius: 99,
                   cursor: "pointer",
-                  background: "var(--green-600)",
-                  border: "none",
-                  color: "white",
-                  fontWeight: 700,
+                  background: viewScope === "monthly" ? "var(--green-600)" : "transparent",
+                  border: viewScope === "monthly" ? "none" : "1px solid var(--surface-border)",
+                  color: viewScope === "monthly" ? "white" : "var(--text-muted)",
+                  fontWeight: viewScope === "monthly" ? 700 : 500,
                   fontFamily: "var(--font-body)",
                 }}
               >

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SimInput, SimOutput } from "../types";
+import type { Page, SimInput, SimOutput } from "../types";
 import { calculate } from "../types/calculate";
 import "../styles/simulation.css";
 import "../styles/dashboard.css";
@@ -15,11 +15,25 @@ const DEFAULT_INPUT: SimInput = {
 
 type TabKey = "finansial" | "ekologis" | "rekomendasi";
 
-export default function SimulasiPage() {
-  const [input, setInput] = useState<SimInput>(DEFAULT_INPUT);
-  const [output, setOutput] = useState<SimOutput | null>(null);
+interface SimulasiPageProps {
+  setPage: (p: Page) => void;
+  simInput: SimInput;
+  setSimInput: (val: SimInput) => void;
+  simOutput: SimOutput | null;
+  setSimOutput: (val: SimOutput) => void;
+}
+
+export default function SimulasiPage({
+  setPage,
+  simInput,
+  setSimInput,
+  simOutput,
+  setSimOutput,
+}: SimulasiPageProps) {
+  const [input, setInput] = useState<SimInput>(simInput || DEFAULT_INPUT);
+  const [output, setOutput] = useState<SimOutput | null>(simOutput);
   const [activeTab, setActiveTab] = useState<TabKey>("finansial");
-  const [hasResult, setHasResult] = useState(false);
+  const [hasResult, setHasResult] = useState(!!simOutput);
 
   const handleChange = (key: keyof SimInput, val: string | number) => {
     setInput((prev) => ({ ...prev, [key]: val }));
@@ -29,6 +43,8 @@ export default function SimulasiPage() {
   const handleSimulate = () => {
     const result = calculate(input);
     setOutput(result);
+    setSimOutput(result);
+    setSimInput(input);
     setHasResult(true);
   };
 
