@@ -5,35 +5,34 @@ export default function Footer() {
     <footer className="page-footer">
       <div className="footer-inner">
         <div>
-          <div className="footer-brand">🌾 Astungkara · RiceDuck Predict</div>
+          <div className="footer-brand">🌾 Astungkara Way · DSS Padi–Bebek</div>
           <p className="footer-desc">
-            Sistem prediksi hasil panen berbasis teknologi pertanian terpadu padi–bebek.
-            Optimasi sinergi ekosistem sawah untuk produktivitas dan keberlanjutan maksimal.
+            Sistem pendukung keputusan untuk simulasi integrasi padi dan bebek berbasis model matematis.
           </p>
         </div>
         <div>
-          <div className="footer-col-title">Fitur</div>
-          {['Prediksi Hasil Panen', 'Analisis Risiko Hama', 'Rekomendasi Cerdas', 'Dashboard Monitoring'].map(f => (
-            <div key={f} className="footer-link">
-              <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>›</span>
-              {f}
-            </div>
-          ))}
-        </div>
-        <div>
-          <div className="footer-col-title">Varietas Didukung</div>
-          {['Cigelis', 'Ciherang', 'Inpari 32', 'Sertani'].map(v => (
-            <div key={v} className="footer-link">
-              <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>✓</span>
-              {v}
-            </div>
-          ))}
+          <div className="footer-col-title">Fitur DSS</div>
+          <div className="footer-link">
+            <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>›</span>
+            Simulasi padi-bebek
+          </div>
+          <div className="footer-link">
+            <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>›</span>
+            Rekomendasi kepadatan
+          </div>
+          <div className="footer-link">
+            <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>›</span>
+            Estimasi yield
+          </div>
+          <div className="footer-link">
+            <span style={{ color: 'var(--green-300)', opacity: 0.6 }}>›</span>
+            Ringkasan ekonomi, ekologi, dan lingkungan
+          </div>
         </div>
       </div>
       <hr className="footer-divider" />
       <div className="footer-bottom">
-        <span className="footer-copy">© 2025 Astungkara · Traditional Tech Innovation</span>
-        <span className="footer-version">Versi 1.2.0 · Sistem Padi–Bebek</span>
+        <span className="footer-copy">© 2025–2026 Astungkara Way · Subak Sibang, Badung</span>
       </div>
     </footer>
   );

@@ -1,71 +1,72 @@
-import { useState } from 'react';
-import type { Page, SimInput, SimOutput } from './types';
-import { calculate } from './types/calculate';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
-import Footer from './components/Footer';
-import DashboardPage from './pages/DashboardPage';
-import SimulasiPage from './pages/SimulasiPage';
-import LaporanPage from './pages/LaporanPage';
-import './styles/globals.css';
-import './styles/dashboard.css';
+import { useState } from "react";
+import type { Page } from "./types";
+import type { DssSimulationRequest, DssSimulationResponse } from "./types/api";
+import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
+import Footer from "./components/Footer";
+import SimulasiPage from "./pages/SimulasiPage";
+import HistoryPage from "./pages/HistoryPage";
+import "./styles/globals.css";
+import "./styles/dashboard.css";
 
-const DEFAULT_INPUT: SimInput = {
-  lahanLuas: 2.5,
-  jumlahBebek: 150,
-  varietasPadi: 'Ciherang',
-  sistemTanam: 'Jajar Legowo',
-  tanggalTanam: '2025-11-20',
-  umurBebek: 21,
+// DSS backend input defaults (aligned with backend example)
+const DSS_DEFAULT_INPUT: DssSimulationRequest = {
+  duck_count: 28,
+  land_area_are: 7,
+  planting_date: "2026-06-01",
+  rice_variety: "sertani",
+  planting_system: "jajar_legowo",
+  duck_age_days: 30,
+};
+
+// Extend type to allow temporary null for empty inputs
+type DssSimulationInputState = Omit<
+  DssSimulationRequest,
+  "duck_count" | "land_area_are" | "duck_age_days"
+> & {
+  duck_count: number | null;
+  land_area_are: number | null;
+  duck_age_days: number | null;
 };
 
 export default function App() {
-  const [page, setPage] = useState<Page>('dashboard');
+  const [page, setPage] = useState<Page>("simulasi");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Shared state for simulation
-  const [simInput, setSimInput] = useState<SimInput>(DEFAULT_INPUT);
-  const [simOutput, setSimOutput] = useState<SimOutput>(() => calculate(DEFAULT_INPUT));
+  // DSS backend state — for SimulasiPage & Topbar print
+  const [dssInput, setDssInput] =
+    useState<DssSimulationInputState>(DSS_DEFAULT_INPUT);
+  const [dssOutput, setDssOutput] = useState<DssSimulationResponse | null>(
+    null,
+  );
 
-  // Shared state for field observations
-  const [loggedMoisture, setLoggedMoisture] = useState<number>(72);
-  const [loggedWaterLevel, setLoggedWaterLevel] = useState<number>(12.5);
+  const handleSetPage = (p: Page) => {
+    setPage(p);
+    setMobileMenuOpen(false);
+  };
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard':
-        return (
-          <DashboardPage
-            setPage={setPage}
-            simInput={simInput}
-            simOutput={simOutput}
-            loggedMoisture={loggedMoisture}
-            setLoggedMoisture={setLoggedMoisture}
-            loggedWaterLevel={loggedWaterLevel}
-            setLoggedWaterLevel={setLoggedWaterLevel}
-          />
-        );
-      case 'simulasi':
+      case "simulasi":
         return (
           <SimulasiPage
-            setPage={setPage}
-            simInput={simInput}
-            setSimInput={setSimInput}
-            simOutput={simOutput}
-            setSimOutput={setSimOutput}
+            setPage={handleSetPage}
+            dssInput={dssInput}
+            setDssInput={setDssInput}
+            dssOutput={dssOutput}
+            setDssOutput={setDssOutput}
           />
         );
-      case 'laporan':
-        return <LaporanPage />;
+      case "history":
+        return <HistoryPage setPage={handleSetPage} />;
       default:
         return (
-          <DashboardPage
-            setPage={setPage}
-            simInput={simInput}
-            simOutput={simOutput}
-            loggedMoisture={loggedMoisture}
-            setLoggedMoisture={setLoggedMoisture}
-            loggedWaterLevel={loggedWaterLevel}
-            setLoggedWaterLevel={setLoggedWaterLevel}
+          <SimulasiPage
+            setPage={handleSetPage}
+            dssInput={dssInput}
+            setDssInput={setDssInput}
+            dssOutput={dssOutput}
+            setDssOutput={setDssOutput}
           />
         );
     }
@@ -73,18 +74,20 @@ export default function App() {
 
   return (
     <div className="dashboard-layout">
-      <Sidebar page={page} setPage={setPage} />
+      <Sidebar
+        page={page}
+        setPage={setPage}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
+      />
       <div className="main-content">
         <Topbar
           page={page}
-          simInput={simInput}
-          simOutput={simOutput}
-          loggedMoisture={loggedMoisture}
-          loggedWaterLevel={loggedWaterLevel}
+          dssInput={dssInput}
+          dssOutput={dssOutput}
+          onMobileMenuToggle={() => setMobileMenuOpen((v) => !v)}
         />
-        <main>
-          {renderPage()}
-        </main>
+        <main>{renderPage()}</main>
         <Footer />
       </div>
     </div>

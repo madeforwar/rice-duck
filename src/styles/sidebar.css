@@ -154,3 +154,18 @@
   font-size: 10.5px;
   opacity: 0.7;
 }
+
+/* Mobile overlay behind sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 49;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+  }
+}

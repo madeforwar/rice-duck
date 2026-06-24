@@ -524,12 +524,13 @@
 .page-footer {
   background: linear-gradient(135deg, #0a1f0f 0%, #0f2d17 100%);
   padding: 24px 28px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .footer-inner {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 32px;
   margin-bottom: 20px;
 }

@@ -103,3 +103,30 @@
 .btn-export-icon {
   font-size: 13px;
 }
+
+/* Mobile hamburger button — hidden on desktop */
+.topbar-mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+
+.topbar-mobile-menu-btn:hover {
+  background: var(--surface-muted);
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .topbar-mobile-menu-btn {
+    display: flex;
+  }
+}
