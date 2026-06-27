@@ -13,10 +13,17 @@ export function getDssOptions() {
 }
 
 export function simulateDss(payload: DssSimulationRequest) {
+  const normalizedPayload = {
+    ...payload,
+    ...(payload.duck_buy_price_rp_per_duck == null
+      ? {}
+      : { duck_buy_price_rp_per_duck: payload.duck_buy_price_rp_per_duck }),
+  };
+
   return apiFetch<DssSimulationResponse>(`${DSS_PREFIX}/simulate`, {
     method: "POST",
     authMode: "optional",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 }
 

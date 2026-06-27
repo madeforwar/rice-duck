@@ -3,6 +3,7 @@ export type BackendStatus =
   | "partial"
   | "complete"
   | "estimation_only"
+  | "estimation-only"
   | "unavailable"
   | "disabled"
   | "collected"
@@ -11,10 +12,16 @@ export type BackendStatus =
   | "literature-reference-a02"
   | "local-calibrated"
   | "local-estimate"
+  | "local-input"
   | "mixed"
   | "system-design"
   | "system-design-uncalibrated"
-  | "missing";
+  | "missing"
+  | "missing_params"
+  | "missing-actual-price"
+  | "required-user-input"
+  | "data-collection-fallback"
+  | "limitation";
 
 export type ProfitDataPurity = "local-calibrated" | "mixed" | "literature-uncalibrated";
 
@@ -70,6 +77,7 @@ export interface DssSimulationRequest {
   rice_variety: string;
   planting_system: string;
   duck_age_days: number;
+  duck_buy_price_rp_per_duck?: number | null;
 }
 
 export interface RiceVarietyOption {
@@ -119,6 +127,32 @@ export interface ScenarioYield {
   estimated_total_kg: number;
 }
 
+export interface DuckAgeAssessment {
+  duck_age_days: number;
+  u_status: string;
+  c_age: number;
+  p_duck_buy_age_rp: number | null;
+  p_duck_buy_age_source: string;
+  p_duck_buy_age_status: BackendStatus | string;
+  requires_actual_duck_buy_price: boolean;
+  note: string;
+}
+
+export interface DurationConstraintSummary {
+  t_max_eff_days: number;
+  hst_phase_limit_days: number;
+  t_age_max_days: number;
+  t_maks_rekomendasi_days: number;
+  u_target_out_max_days: number;
+}
+
+export interface QualityOutput {
+  q_output: "High" | "Medium" | "Low" | string;
+  score: number;
+  components: Record<string, number>;
+  notes: string[];
+}
+
 export interface ActualScenario {
   duck_count: number;
   land_area_are: number;
@@ -130,6 +164,8 @@ export interface ActualScenario {
   duration_days: number;
   release_date: string;
   pull_date: string;
+  t_age_max_days?: number | null;
+  t_maks_rekomendasi_days?: number | null;
   surviving_ducks: number;
   dung_total_per_duck_kg: number;
   dung_status: BackendStatus | string;
@@ -154,6 +190,8 @@ export interface RecommendedScenario {
   recommended_duration_days: number;
   recommended_release_date: string;
   recommended_pull_date: string;
+  t_age_max_days?: number | null;
+  t_maks_rekomendasi_days?: number | null;
   surviving_ducks: number;
   dung_total_per_duck_kg: number;
   dung_status: BackendStatus | string;
@@ -226,7 +264,11 @@ export interface EconomicsScenario {
   conventional_rice_revenue_rp: number | null;
   delta_rice_value_rp: number | null;
   duck_revenue_rp: number;
-  duck_purchase_cost_rp: number;
+  duck_purchase_cost_rp: number | null;
+  duck_purchase_price_rp_per_duck?: number | null;
+  duck_purchase_price_source?: string | null;
+  duck_purchase_price_status?: BackendStatus | string | null;
+  duck_purchase_price_requires_actual?: boolean;
   feed_cost_rp: number | null;
   feed_cost_status: BackendStatus | string;
   duck_net_value_rp: number | null;
@@ -365,6 +407,9 @@ export interface DssSimulationResponse {
     parameters: Record<string, LookupParameterMeta>;
     [key: string]: unknown;
   };
+  duck_age_assessment: DuckAgeAssessment;
+  duration_constraints: DurationConstraintSummary;
+  quality_output: QualityOutput;
   actual_scenario: ActualScenario;
   optimality_assessment: OptimalityAssessment;
   recommended_scenario: RecommendedScenario | null;

@@ -143,7 +143,6 @@ function HistoryDetailContent({ detail }: { detail: DssSimulationResponse }) {
   const actual = detail.actual_scenario;
   const eco = detail.economics?.actual;
   const ecol = detail.ecology?.actual;
-  const env = detail.environment?.actual;
   const opt = detail.optimality_assessment;
   const rec = detail.recommended_scenario;
 
@@ -168,7 +167,7 @@ function HistoryDetailContent({ detail }: { detail: DssSimulationResponse }) {
     { label: 'Nilai Ekologis', value: fmtRp(ecol?.partial_ecological_value_rp ?? ecol?.total_ecological_value_rp) },
     { label: 'Penghematan Gulma', value: fmtRp(ecol?.weeding_saving_rp) },
     { label: 'N Tanah (kg/are)', value: fmtNum(ecol?.soil_nutrients?.n_kg_per_are, '', 4) },
-    { label: 'CO₂e Emisi', value: env?.co2e_are != null ? `${fmtNum(env.co2e_are, ' kg/are', 2)}` : 'Belum tersedia' },
+    { label: 'CO₂e Emisi', value: 'Limitasi penelitian' },
   ];
 
   return (
@@ -303,9 +302,6 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
 
   const statsToShow = [
     { label: 'Total Simulasi', value: isGuest ? '—' : String(histories.length), unit: 'sesi', delta: 'Tersimpan di akun', up: true },
-    { label: 'Rata-rata Yield', value: '—', unit: 'kg/are', delta: 'Tidak dihitung di frontend', up: true },
-    { label: 'Varietas Terpopuler', value: '—', unit: '', delta: 'Tidak dihitung di frontend', up: true },
-    { label: 'Status Dominan', value: '—', unit: '', delta: 'Tidak dihitung di frontend', up: true },
   ];
 
   return (

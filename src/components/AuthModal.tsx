@@ -274,7 +274,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             <input
               type="password"
               className="form-input"
-              placeholder={mode === "register" ? "Min. 6 karakter" : "••••••••"}
+              placeholder={mode === "register" ? "Min. 8 karakter" : "••••••••"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}

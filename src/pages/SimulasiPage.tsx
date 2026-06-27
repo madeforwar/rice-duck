@@ -10,6 +10,9 @@ import type {
   RecommendedScenario,
   OptimalityAssessment,
   DataReadinessBlock,
+  DuckAgeAssessment,
+  DurationConstraintSummary,
+  QualityOutput,
 } from "../types/api";
 import "../styles/simulation.css";
 import "../styles/dashboard.css";
@@ -49,17 +52,26 @@ function fmtDate(dateStr: string | null | undefined): string {
 const STATUS_LABEL: Record<string, string> = {
   "local-calibrated": "Data Lokal",
   "local-estimate": "Estimasi Lokal",
+  "local-input": "Input Pengguna",
   "literature-uncalibrated": "Ref. Literatur",
   mixed: "Data Campuran",
   partial: "Parsial",
   unavailable: "Tidak Tersedia",
   missing: "Tidak Tersedia",
+  missing_params: "Data Belum Lengkap",
   ready: "Siap",
+  estimation_only: "Estimasi",
   "estimation-only": "Estimasi",
   estimation: "Estimasi",
   disabled: "Nonaktif",
   collected: "Terkumpul",
+  limitation: "Limitasi Penelitian",
   "system-design": "Aturan Sistem",
+  "system-design-uncalibrated": "Aturan Sistem",
+  "missing-actual-price": "Butuh Harga Aktual",
+  "required-user-input": "Butuh Input Pengguna",
+  "data-collection-fallback": "Fallback Data Lokal",
+  ESTIMATION_ONLY: "Estimasi",
 };
 
 function StatusBadge({ status }: { status: string | null | undefined }) {
@@ -80,8 +92,11 @@ const RISK_LABEL: Record<string, string> = {
 const DATA_READINESS_LABEL: Record<string, string> = {
   ready: "Tersedia",
   estimation_only: "Estimasi",
+  "estimation-only": "Estimasi",
   partial: "Parsial",
-  "literature-uncalibrated": "Referensi",
+  limitation: "Limitasi Penelitian",
+  unavailable: "Belum Tersedia",
+  "literature-uncalibrated": "Referensi Literatur",
 };
 
 function RiskBadge({ riskStatus }: { riskStatus: string | null | undefined }) {
@@ -97,9 +112,11 @@ function RiskBadge({ riskStatus }: { riskStatus: string | null | undefined }) {
 function ScenarioCard({
   title,
   scenario,
+  landAreaAre,
 }: {
   title: string;
   scenario: ActualScenario | RecommendedScenario | null;
+  landAreaAre?: number | null;
 }) {
   if (!scenario) return null;
 
@@ -170,7 +187,9 @@ function ScenarioCard({
                 color: "var(--text-primary)",
               }}
             >
-              {(scenario as ActualScenario).land_area_are} are
+              {isRecommended
+                ? (landAreaAre != null ? `${landAreaAre} are` : "—")
+                : `${(scenario as ActualScenario).land_area_are} are`}
             </div>
           </div>
           <div>
@@ -340,6 +359,249 @@ function ScenarioCard({
             </div>
             <RiskBadge riskStatus={scenario.risk_status} />
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Umur bebek & kualitas rekomendasi card (Rev4)
+const Q_OUTPUT_LABEL: Record<string, string> = {
+  High: "Tinggi",
+  Medium: "Sedang",
+  Low: "Rendah",
+};
+const Q_OUTPUT_NOTE: Record<string, string> = {
+  High: "Data utama cukup lengkap. Rekomendasi dapat dipakai sebagai panduan.",
+  Medium:
+    "Ada asumsi atau fallback data. Hasil masih layak sebagai panduan awal.",
+  Low: "Beberapa data penting belum lengkap. Gunakan sebagai estimasi awal, bukan keputusan final.",
+};
+const U_STATUS_LABEL: Record<string, string> = {
+  "siap lokal": "Siap (21–30 hari)",
+  "muda/perlu pengawasan": "Muda, perlu pengawasan",
+  "belum disarankan": "Terlalu muda",
+  "lebih tua/perlu durasi konservatif": "Lebih tua, durasi konservatif",
+};
+
+function fmtRp(val: number | null | undefined): string {
+  if (val == null) return "—";
+  return `Rp ${val.toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
+}
+
+function DuckAgeQualityCard({
+  ageAssessment,
+  durationConstraints,
+  qualityOutput,
+}: {
+  ageAssessment: DuckAgeAssessment;
+  durationConstraints: DurationConstraintSummary;
+  qualityOutput: QualityOutput;
+}) {
+  const qLabel = Q_OUTPUT_LABEL[qualityOutput.q_output] ?? qualityOutput.q_output;
+  const qNote = Q_OUTPUT_NOTE[qualityOutput.q_output] ?? "";
+  const uLabel =
+    U_STATUS_LABEL[ageAssessment.u_status] ?? ageAssessment.u_status;
+  const qColor =
+    qualityOutput.q_output === "High"
+      ? "var(--green-500)"
+      : qualityOutput.q_output === "Medium"
+        ? "var(--accent-amber)"
+        : "#dc2626";
+
+  return (
+    <div
+      className="card"
+      style={{
+        marginBottom: 16,
+        borderLeft: "4px solid var(--green-500)",
+      }}
+    >
+      <div className="card-header">
+        <span className="card-title">Umur Bebek &amp; Kualitas Rekomendasi</span>
+      </div>
+      <div className="card-body">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          {/* Status umur */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Status Umur Bebek
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              {ageAssessment.duck_age_days} hari
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+              {uLabel}
+            </div>
+          </div>
+          {/* Harga beli */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Harga Beli Dipakai
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              {ageAssessment.p_duck_buy_age_rp != null
+                ? fmtRp(ageAssessment.p_duck_buy_age_rp) + "/ekor"
+                : "Butuh harga aktual"}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              {STATUS_LABEL[ageAssessment.p_duck_buy_age_status] ??
+                ageAssessment.p_duck_buy_age_status}
+            </div>
+          </div>
+          {/* Kualitas rekomendasi */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Kualitas Rekomendasi
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: qColor }}>
+              {qLabel}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              Skor: {(qualityOutput.score * 100).toFixed(0)}%
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 16,
+            marginBottom: 12,
+          }}
+        >
+          {/* Batas durasi umur */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Batas Durasi dari Umur
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              {durationConstraints.t_age_max_days} hari
+            </div>
+          </div>
+          {/* Durasi maks rekomendasi */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Durasi Maks. Rekomendasi
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              {durationConstraints.t_maks_rekomendasi_days} hari
+            </div>
+          </div>
+          {/* Target umur tarik */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              Target Umur Tarik Maks.
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              {durationConstraints.u_target_out_max_days} hari
+            </div>
+          </div>
+        </div>
+
+        {/* Peringatan harga beli */}
+        {ageAssessment.requires_actual_duck_buy_price && (
+          <div
+            style={{
+              padding: "8px 12px",
+              background: "rgba(245,158,11,0.07)",
+              border: "1px solid rgba(245,158,11,0.25)",
+              borderRadius: "var(--radius-sm)",
+              fontSize: 12,
+              color: "#92400e",
+              marginBottom: 10,
+            }}
+          >
+            ⚠️ Harga beli bebek aktual belum diisi. Estimasi laba mungkin
+            bias. Isi harga beli aktual di form untuk hasil lebih akurat.
+          </div>
+        )}
+
+        {/* Note kualitas */}
+        {qNote && (
+          <div
+            style={{
+              fontSize: 12,
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              marginBottom: 8,
+            }}
+          >
+            {qNote}
+          </div>
+        )}
+
+        {/* Catatan ilmiah ringkas */}
+        <div
+          style={{
+            fontSize: 11,
+            color: "var(--text-muted)",
+            lineHeight: 1.6,
+            borderTop: "1px solid var(--surface-border)",
+            paddingTop: 8,
+            marginTop: 4,
+          }}
+        >
+          Catatan: umur bebek hanya memengaruhi laba dan delta profit
+          melalui harga beli bebek yang digunakan. Umur tidak mengubah estimasi
+          yield, pakan, survival, kotoran, hara tanah, nilai ekologi, bobot
+          jual, atau emisi secara langsung.
         </div>
       </div>
     </div>
@@ -584,6 +846,10 @@ export default function SimulasiPage({
     });
   };
 
+  const needsActualDuckBuyPrice =
+    dssInput.duck_age_days != null &&
+    (dssInput.duck_age_days < 14 || dssInput.duck_age_days > 30);
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -598,6 +864,24 @@ export default function SimulasiPage({
         dssInput.duck_age_days == null
       ) {
         setError("Silakan isi semua parameter numerik dengan benar.");
+        return;
+      }
+
+      if (dssInput.land_area_are <= 0) {
+        setError("Luas lahan harus lebih dari 0 are.");
+        return;
+      }
+
+      if (dssInput.duck_age_days <= 0) {
+        setError("Umur bebek saat masuk sawah harus lebih dari 0 hari.");
+        return;
+      }
+
+      if (
+        dssInput.duck_buy_price_rp_per_duck != null &&
+        dssInput.duck_buy_price_rp_per_duck <= 0
+      ) {
+        setError("Harga beli bebek aktual harus lebih dari 0 rupiah per ekor.");
         return;
       }
 
@@ -658,7 +942,7 @@ export default function SimulasiPage({
                   className="obs-input"
                   type="number"
                   step="0.01"
-                  min="0"
+                  min="0.01"
                   value={dssInput.land_area_are ?? ""}
                   onChange={(e) =>
                     handleInputChange(
@@ -746,15 +1030,15 @@ export default function SimulasiPage({
                   required
                 />
               </div>
-              <div className="obs-input-group" style={{ marginBottom: 20 }}>
+              <div className="obs-input-group" style={{ marginBottom: 16 }}>
                 <div className="obs-input-label">
-                  Umur Bebek Saat Dilepaskan (hari)
+                  Umur bebek saat masuk sawah (hari)
                 </div>
                 <input
                   className="obs-input"
                   type="number"
                   step="1"
-                  min="0"
+                  min="1"
                   value={dssInput.duck_age_days ?? ""}
                   onChange={(e) =>
                     handleInputChange(
@@ -764,7 +1048,49 @@ export default function SimulasiPage({
                   }
                   required
                 />
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    marginTop: 4,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Umur bebek dipakai untuk membaca status kesiapan, harga beli
+                  yang digunakan, batas durasi di sawah, dan tanggal tarik.
+                </div>
               </div>
+              {needsActualDuckBuyPrice && (
+                <div className="obs-input-group" style={{ marginBottom: 20 }}>
+                  <div className="obs-input-label">
+                    Harga Beli Bebek Aktual (Rp/ekor)
+                  </div>
+                  <input
+                    className="obs-input"
+                    type="number"
+                    step="100"
+                    min="1"
+                    value={dssInput.duck_buy_price_rp_per_duck ?? ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "duck_buy_price_rp_per_duck",
+                        e.target.value ? parseFloat(e.target.value) : null,
+                      )
+                    }
+                  />
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--text-muted)",
+                      marginTop: 4,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Menerima harga beli aktual. Isi saat umur di
+                    luar 14–30 hari agar estimasi laba tidak bias.
+                  </div>
+                </div>
+              )}
               <button
                 type="submit"
                 className="btn-log"
@@ -816,12 +1142,14 @@ export default function SimulasiPage({
               <ScenarioCard
                 title="Kondisi Aktual"
                 scenario={dssOutput.actual_scenario}
+                landAreaAre={dssOutput.actual_scenario.land_area_are}
               />
               {!dssOutput.optimality_assessment.is_optimal &&
                 dssOutput.recommended_scenario && (
                   <ScenarioCard
                     title="Rekomendasi"
                     scenario={dssOutput.recommended_scenario}
+                    landAreaAre={dssOutput.input.land_area_are}
                   />
                 )}
             </>
@@ -839,6 +1167,16 @@ export default function SimulasiPage({
               dataReadiness={dssOutput.data_readiness}
             />
           </div>
+
+          {dssOutput.duck_age_assessment &&
+            dssOutput.duration_constraints &&
+            dssOutput.quality_output && (
+              <DuckAgeQualityCard
+                ageAssessment={dssOutput.duck_age_assessment}
+                durationConstraints={dssOutput.duration_constraints}
+                qualityOutput={dssOutput.quality_output}
+              />
+            )}
 
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
@@ -1578,183 +1916,68 @@ export default function SimulasiPage({
               </div>
             </DetailSection>
 
-            {/* Emisi & Lingkungan */}
-            <DetailSection title="Emisi & Lingkungan">
+            {/* Emisi & Lingkungan — Limitasi Rev4 */}
+            <DetailSection title="Emisi &amp; Lingkungan — Limitasi Penelitian">
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 24,
+                  padding: "12px 14px",
+                  background: "rgba(100,116,139,0.06)",
+                  border: "1px solid rgba(100,116,139,0.2)",
+                  borderRadius: "var(--radius-sm)",
+                  marginBottom: 12,
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "var(--text-muted)",
-                      textTransform: "uppercase",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Aktual
-                  </div>
-                  <MetricWithStatus
-                    label="CO₂e / Are"
-                    value={dssOutput.environment.actual.co2e_are}
-                    unit="kg"
-                    formulaAvailable={
-                      dssOutput.environment.actual.formula_available
-                    }
-                    numericReady={dssOutput.environment.actual.numeric_ready}
-                  />
-                  <MetricWithStatus
-                    label="F CH₄ / Are"
-                    value={dssOutput.environment.actual.f_ch4_are}
-                    formulaAvailable={
-                      dssOutput.environment.actual.formula_available
-                    }
-                    numericReady={dssOutput.environment.actual.numeric_ready}
-                  />
-                  <MetricWithStatus
-                    label="F N₂O / Are"
-                    value={dssOutput.environment.actual.f_n2o_are}
-                    formulaAvailable={
-                      dssOutput.environment.actual.formula_available
-                    }
-                    numericReady={dssOutput.environment.actual.numeric_ready}
-                  />
-                  <MetricWithStatus
-                    label="GHGI"
-                    value={dssOutput.environment.actual.ghgi}
-                    formulaAvailable={
-                      dssOutput.environment.actual.formula_available
-                    }
-                    numericReady={dssOutput.environment.actual.numeric_ready}
-                  />
-                  <MetricWithStatus
-                    label="Reduksi CH₄"
-                    value={dssOutput.environment.actual.ch4_reduction_pct}
-                    unit="%"
-                    formulaAvailable={
-                      dssOutput.environment.actual.formula_available
-                    }
-                    numericReady={dssOutput.environment.actual.numeric_ready}
-                  />
-                  {dssOutput.environment.actual.calibration_note && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--text-muted)",
-                        marginTop: 12,
-                      }}
-                    >
-                      {dssOutput.environment.actual.calibration_note}
-                    </div>
-                  )}
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                    marginBottom: 6,
+                  }}
+                >
+                  Modul emisi belum menjadi output numerik aktif
                 </div>
-                {!dssOutput.optimality_assessment.is_optimal &&
-                dssOutput.environment.recommended ? (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "var(--text-muted)",
-                        textTransform: "uppercase",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Rekomendasi
-                    </div>
-                    <MetricWithStatus
-                      label="CO₂e / Are"
-                      value={dssOutput.environment.recommended.co2e_are}
-                      unit="kg"
-                      formulaAvailable={
-                        dssOutput.environment.recommended.formula_available
-                      }
-                      numericReady={
-                        dssOutput.environment.recommended.numeric_ready
-                      }
-                    />
-                    <MetricWithStatus
-                      label="F CH₄ / Are"
-                      value={dssOutput.environment.recommended.f_ch4_are}
-                      formulaAvailable={
-                        dssOutput.environment.recommended.formula_available
-                      }
-                      numericReady={
-                        dssOutput.environment.recommended.numeric_ready
-                      }
-                    />
-                    <MetricWithStatus
-                      label="F N₂O / Are"
-                      value={dssOutput.environment.recommended.f_n2o_are}
-                      formulaAvailable={
-                        dssOutput.environment.recommended.formula_available
-                      }
-                      numericReady={
-                        dssOutput.environment.recommended.numeric_ready
-                      }
-                    />
-                    <MetricWithStatus
-                      label="GHGI"
-                      value={dssOutput.environment.recommended.ghgi}
-                      formulaAvailable={
-                        dssOutput.environment.recommended.formula_available
-                      }
-                      numericReady={
-                        dssOutput.environment.recommended.numeric_ready
-                      }
-                    />
-                    <MetricWithStatus
-                      label="Reduksi CH₄"
-                      value={
-                        dssOutput.environment.recommended.ch4_reduction_pct
-                      }
-                      unit="%"
-                      formulaAvailable={
-                        dssOutput.environment.recommended.formula_available
-                      }
-                      numericReady={
-                        dssOutput.environment.recommended.numeric_ready
-                      }
-                    />
-                    {dssOutput.environment.recommended.calibration_note && (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "var(--text-muted)",
-                          marginTop: 12,
-                        }}
-                      >
-                        {dssOutput.environment.recommended.calibration_note}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "var(--text-muted)",
-                        textTransform: "uppercase",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Rekomendasi
-                    </div>
-                    <div
-                      style={{ fontSize: 14, color: "var(--text-secondary)" }}
-                    >
-                      Tidak ada rekomendasi tambahan karena skenario aktual
-                      sudah berada pada titik optimal model.
-                    </div>
-                  </div>
-                )}
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Data CH₄, N₂O, baseline emisi, dan DO belum tersedia dari
+                  pengukuran lokal. Rumus model sudah disiapkan, tetapi tidak
+                  menghasilkan angka yang dapat dipakai sebagai output DSS
+                  utama. Status modul:{" "}
+                  <StatusBadge
+                    status={
+                      dssOutput.environment.actual.data_readiness ?? "limitation"
+                    }
+                  />
+                </div>
               </div>
+              {dssOutput.environment.actual.calibration_note && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {dssOutput.environment.actual.calibration_note}
+                </div>
+              )}
+              {dssOutput.environment.actual.missing_parameters.length > 0 && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    marginTop: 8,
+                  }}
+                >
+                  Parameter belum tersedia:{" "}
+                  {dssOutput.environment.actual.missing_parameters.join(", ")}
+                </div>
+              )}
             </DetailSection>
 
             {/* Data Readiness & Notes */}

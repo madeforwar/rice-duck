@@ -17,6 +17,7 @@ const DSS_DEFAULT_INPUT: DssSimulationRequest = {
   rice_variety: "sertani",
   planting_system: "jajar_legowo",
   duck_age_days: 30,
+  duck_buy_price_rp_per_duck: null,
 };
 
 // Extend type to allow temporary null for empty inputs
