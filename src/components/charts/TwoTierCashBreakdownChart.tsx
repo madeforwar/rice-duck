@@ -96,24 +96,26 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
     });
 
     return (
-      <div style={{ width: "100%", height: 350 }}>
+      <div style={{ width: "100%", height: 380 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 25, right: 30, left: 15, bottom: 25 }}>
+          <BarChart data={chartData} margin={{ top: 35, right: 45, left: 25, bottom: 45 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
             <XAxis
               dataKey="name"
               stroke="#64748b"
               fontSize={11}
               tickLine={false}
+              tickMargin={12}
             />
             <YAxis
               stroke="#64748b"
               fontSize={11}
               tickLine={false}
+              tickMargin={12}
               tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip content={<CustomWaterfallTooltip />} />
-            <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "15px" }} iconType="square" />
+            <Legend verticalAlign="bottom" height={40} wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }} iconType="square" />
             {/* Floating waterfall transparent base */}
             <Bar dataKey="base" stackId="waterfall" fill="transparent" legendType="none" />
             <Bar dataKey="barVal" name="Financial Waterfall Item" stackId="waterfall" radius={[4, 4, 0, 0]}>
@@ -141,20 +143,22 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
   ];
 
   return (
-    <div style={{ width: "100%", height: 350 }}>
+    <div style={{ width: "100%", height: 380 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 25, right: 30, left: 15, bottom: 25 }}>
+        <BarChart data={data} margin={{ top: 35, right: 45, left: 25, bottom: 45 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="category"
             stroke="#64748b"
             fontSize={11}
             tickLine={false}
+            tickMargin={12}
           />
           <YAxis
             stroke="#64748b"
             fontSize={11}
             tickLine={false}
+            tickMargin={12}
             tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}k`}
           />
           <Tooltip
@@ -167,7 +171,7 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
           />
-          <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "15px" }} iconType="square" />
+          <Legend verticalAlign="bottom" height={40} wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }} iconType="square" />
           <Bar dataKey="Gross Grain & Duck Revenue" fill="#16a34a" radius={[4, 4, 0, 0]} />
           <Bar dataKey="Duckling Investment Cost" fill="#d97706" radius={[4, 4, 0, 0]} />
           <Bar dataKey="Pure Absorbed Net Cash" fill="#2563eb" radius={[4, 4, 0, 0]} />

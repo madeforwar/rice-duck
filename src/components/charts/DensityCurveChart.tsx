@@ -86,9 +86,9 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
   const maxDensity = Math.max(...chartData.map((d) => d.density), 12);
 
   return (
-    <div style={{ width: "100%", height: 350 }}>
+    <div style={{ width: "100%", height: 380 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 25, right: 30, left: 15, bottom: 25 }}>
+        <LineChart data={chartData} margin={{ top: 35, right: 45, left: 25, bottom: 45 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="density"
@@ -97,13 +97,14 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             stroke="#64748b"
             fontSize={11}
             tickLine={false}
+            tickMargin={12}
           >
             <Label
               value="Stocking Density (ducks/are)"
               position="insideBottom"
-              offset={-15}
+              offset={-25}
               fill="#475569"
-              fontSize={12}
+              fontSize={13}
               style={{ fontWeight: 500 }}
             />
           </XAxis>
@@ -111,12 +112,15 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             stroke="#64748b"
             fontSize={11}
             tickLine={false}
+            tickMargin={12}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
             domain={[0, "auto"]}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ fontSize: "12px", paddingTop: "15px" }}
+            verticalAlign="bottom"
+            height={40}
+            wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
             iconType="circle"
           />
 
@@ -138,7 +142,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
           <Line
             type="monotone"
             dataKey="jarwo_yield"
-            name="Biological Yield Index (Jarwo)"
+            name="Biological Yield Modifier (Legowo 2:1)"
             stroke="#16a34a"
             strokeWidth={2.5}
             dot={false}
@@ -147,7 +151,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
           <Line
             type="monotone"
             dataKey="tegel_yield"
-            name="Biological Yield Index (Tegel)"
+            name="Biological Yield Modifier (Tegel)"
             stroke="#d97706"
             strokeWidth={2}
             strokeDasharray="5 5"
@@ -162,12 +166,13 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Tegel Safe Capacity (${kSafeTegel} ducks/are)`,
+              value: `Tegel Safe Carrying Capacity Limit (${kSafeTegel} ducks/are)`,
               position: "top",
               fill: "#64748b",
               fontSize: 10,
-              fontWeight: 500,
-              dy: -5,
+              fontWeight: "600",
+              dy: -12,
+              dx: 5,
             }}
           />
           <ReferenceLine
@@ -176,12 +181,13 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Jarwo Safe Capacity (${kSafeJarwo} ducks/are)`,
+              value: `Legowo 2:1 Safe Carrying Capacity Limit (${kSafeJarwo} ducks/are)`,
               position: "top",
               fill: "#64748b",
               fontSize: 10,
-              fontWeight: 500,
-              dy: -5,
+              fontWeight: "600",
+              dy: -12,
+              dx: 5,
             }}
           />
           <ReferenceLine
@@ -190,12 +196,13 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Saturation Limit (${kMaxSaturation} ducks/are)`,
+              value: `Maximum Trampling Saturation Threshold (${kMaxSaturation} ducks/are)`,
               position: "top",
               fill: "#dc2626",
               fontSize: 10,
-              fontWeight: 500,
-              dy: -5,
+              fontWeight: "600",
+              dy: -12,
+              dx: 5,
             }}
           />
 

@@ -641,7 +641,7 @@ export default function SimulasiPage({
                     border: "1px solid var(--surface-border)",
                   }}
                 >
-                  Density Curve (F_density)
+                  Canopy Growth Index
                 </button>
                 <button
                   className={`tab-btn ${activeChartTab === "age" ? "active" : ""}`}
@@ -657,7 +657,7 @@ export default function SimulasiPage({
                     border: "1px solid var(--surface-border)",
                   }}
                 >
-                  Age Vulnerability Curve (R_age)
+                  Ontogenic Risk Penalty
                 </button>
                 <button
                   className={`tab-btn ${activeChartTab === "cash" ? "active" : ""}`}
@@ -681,8 +681,8 @@ export default function SimulasiPage({
               {activeChartTab === "density" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Cubic spline relationship curve between duck stocking density (head/are) and crop yield multiplier factor.
-                    Annotated with Jarwo (4.0 head/are) vs Tegel (3.0 head/are) safe thresholds and saturation danger zone (&gt;8.0 head/are).
+                    Cubic spline relationship curve between duck stocking density (ducks/are) and crop yield multiplier factor.
+                    Annotated with Legowo 2:1 (4.0 ducks/are) vs Tegel (3.0 ducks/are) safe carrying capacity limits and saturation threshold (&gt;8.0 ducks/are).
                   </div>
                   <DensityCurveChart 
                     data={vizData?.visualizations?.density_curve ?? vizData?.density_curve ?? dssOutput.charts?.density_series} 
@@ -695,7 +695,7 @@ export default function SimulasiPage({
               {activeChartTab === "age" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Piecewise ontogeny vulnerability curve (R_age) and duck survival ceiling as a function of entry age.
+                    Piecewise ontogeny vulnerability curve and effective flock survival rate as a function of duckling chronological age.
                     Optimal model window: 14–21 days post-hatch.
                   </div>
                   <AgeVulnerabilityChart 
