@@ -158,8 +158,25 @@ export interface DssSandboxOutput {
   Cost_fert_kcl_isolated: number;
 }
 
+export interface DensityDataPoint {
+  d: number;
+  f_density: number;
+}
+
+export interface AgeDataPoint {
+  u: number;
+  r_age: number;
+}
+
+export interface DssSimulationCharts {
+  density_series?: DensityDataPoint[];
+  age_series?: AgeDataPoint[];
+}
+
 // Combined Response — matches backend DSSSimulationResponse exactly
-export interface DssSimulationResponse extends DssCoreOutput, DssSandboxOutput {}
+export interface DssSimulationResponse extends DssCoreOutput, DssSandboxOutput {
+  charts?: DssSimulationCharts;
+}
 
 export interface HistoryListItem {
   id: string;

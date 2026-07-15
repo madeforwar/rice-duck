@@ -8,6 +8,9 @@ import type {
   RiceVarietyOption,
   PlantingSystemOption,
 } from "../types/api";
+import { DensityCurveChart } from "../components/charts/DensityCurveChart";
+import { AgeVulnerabilityChart } from "../components/charts/AgeVulnerabilityChart";
+import { TwoTierCashBreakdownChart } from "../components/charts/TwoTierCashBreakdownChart";
 import "../styles/simulation.css";
 import "../styles/dashboard.css";
 
@@ -199,6 +202,7 @@ export default function SimulasiPage({
   dssOutput,
   setDssOutput,
 }: SimulasiPageProps) {
+  const [activeChartTab, setActiveChartTab] = useState<"density" | "age" | "cash">("density");
   const [options, setOptions] = useState<{
     rice_varieties: RiceVarietyOption[];
     planting_systems: PlantingSystemOption[];
@@ -632,6 +636,99 @@ export default function SimulasiPage({
                 <MetricWithStatus label="Infra Kandang" value={dssOutput.Cost_infra_cage_isolated} unit="Rp" />
               </div>
             </DetailSection>
+          </div>
+
+          {/* SCIENTIFIC VISUALIZATION CHARTS SECTION */}
+          <div className="card" style={{ marginTop: 16 }}>
+            <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="card-title">📈 Visualisasi Kurva & Grafik Ilmiah (SoT v2)</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className={`tab-btn ${activeChartTab === "density" ? "active" : ""}`}
+                  onClick={() => setActiveChartTab("density")}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: activeChartTab === "density" ? "var(--green-600)" : "var(--surface-muted)",
+                    color: activeChartTab === "density" ? "white" : "var(--text-secondary)",
+                    border: "1px solid var(--surface-border)",
+                  }}
+                >
+                  Kurva Kepadatan (F_density)
+                </button>
+                <button
+                  className={`tab-btn ${activeChartTab === "age" ? "active" : ""}`}
+                  onClick={() => setActiveChartTab("age")}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: activeChartTab === "age" ? "var(--green-600)" : "var(--surface-muted)",
+                    color: activeChartTab === "age" ? "white" : "var(--text-secondary)",
+                    border: "1px solid var(--surface-border)",
+                  }}
+                >
+                  Kurva Risiko Umur (R_age)
+                </button>
+                <button
+                  className={`tab-btn ${activeChartTab === "cash" ? "active" : ""}`}
+                  onClick={() => setActiveChartTab("cash")}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: activeChartTab === "cash" ? "var(--green-600)" : "var(--surface-muted)",
+                    color: activeChartTab === "cash" ? "white" : "var(--text-secondary)",
+                    border: "1px solid var(--surface-border)",
+                  }}
+                >
+                  Breakdown Kas Two-Tier
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              {activeChartTab === "density" && (
+                <div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+                    Kurva hubungan kepadatan bebek (d) terhadap indeks manfaat biologis (F_density_bio). 
+                    Menunjukkan zona ideal sistem tanam Jarwo (4 ekor/are) vs Tegel (3 ekor/are) serta ambang saturasi (8 ekor/are).
+                  </div>
+                  <DensityCurveChart 
+                    data={dssOutput.charts?.density_series} 
+                    currentDensity={densityInput ?? undefined} 
+                  />
+                </div>
+              )}
+
+              {activeChartTab === "age" && (
+                <div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+                    Kurva risiko kerusakan tanaman / injakan (R_age) berdasarkan umur bebek saat dimasukkan ke sawah (U_duck).
+                    Rentang ideal ontogeni: 14–21 hari.
+                  </div>
+                  <AgeVulnerabilityChart 
+                    data={dssOutput.charts?.age_series} 
+                    currentAge={dssInput.duck_age_days ?? undefined} 
+                  />
+                </div>
+              )}
+
+              {activeChartTab === "cash" && (
+                <div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+                    Perbandingan visual antara <strong>Tier 1: Core Validated (Kas Nyata)</strong> dan <strong>Tier 2: Sandbox Isolated (Estimasi)</strong>.
+                  </div>
+                  <TwoTierCashBreakdownChart simulationResult={dssOutput} />
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
