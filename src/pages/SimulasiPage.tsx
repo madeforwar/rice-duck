@@ -28,7 +28,7 @@ function fmtNum(
   opts: { suffix?: string; precision?: number } = {},
 ): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
-  return `${value.toLocaleString("id-ID", {
+  return `${value.toLocaleString("en-US", {
     minimumFractionDigits: opts.precision ?? 0,
     maximumFractionDigits: opts.precision ?? 2,
   })}${opts.suffix ?? ""}`;
@@ -37,9 +37,9 @@ function fmtNum(
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("id-ID", {
+    return new Date(dateStr).toLocaleDateString("en-US", {
       day: "numeric",
-      month: "long",
+      month: "short",
       year: "numeric",
     });
   } catch {
@@ -49,24 +49,29 @@ function fmtDate(dateStr: string | null | undefined): string {
 
 function fmtRp(val: number | null | undefined): string {
   if (val == null) return "—";
-  return `Rp ${val.toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
+  return `Rp ${val.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  SAFE: "Aman",
-  WARNING_DENSITY: "Kepadatan terlalu tinggi",
-  WARNING_UNDER_DENSITY: "Kepadatan terlalu rendah",
-  AGE_BUY_RANGE: "Umur bebek sesuai rentang model",
-  AGE_BUY_RANGE_WARNING: "Umur bebek di luar rentang model",
-  ready: "Siap",
-  estimation: "Estimasi",
-  "local-calibrated": "Data lokal terkalibrasi",
-  "local-estimate": "Estimasi lokal",
+  SAFE: "Safe Density",
+  WARNING_DENSITY: "Excessive Density Warning",
+  WARNING_UNDER_DENSITY: "Sub-Optimal Density",
+  AGE_BUY_RANGE: "Optimal Age Range",
+  AGE_BUY_RANGE_WARNING: "Age Model Deviation",
+  ready: "Ready",
+  estimation: "Estimated",
+  "local-calibrated": "Locally Calibrated",
+  "local-estimate": "Local Estimate",
 };
+
+// ASCII Tree Symbol Sanitizer helper
+function cleanText(text: string): string {
+  return text.replace(/[├─└│]/g, "").trim();
+}
 
 function StatusBadge({ status }: { status: string | null | undefined }) {
   if (!status) return null;
-  const label = STATUS_LABEL[status] ?? status;
+  const label = STATUS_LABEL[status] ?? cleanText(status);
   return <span className={`status-badge ${status}`}>{label}</span>;
 }
 
@@ -84,7 +89,7 @@ function DetailSection({
   return (
     <div className={`card${className ? ` ${className}` : ""}`} style={{ marginBottom: 4, ...style }}>
       <div className="card-header">
-        <span className="card-title">{title}</span>
+        <span className="card-title">{cleanText(title)}</span>
       </div>
       <div className="card-body">{children}</div>
     </div>
@@ -107,6 +112,7 @@ function MetricWithStatus({
   dateValue?: string | null | undefined;
 }) {
   let displayValue: React.ReactNode;
+  const safeLabel = cleanText(label);
 
   if (dateValue) {
     displayValue = <span style={{ fontWeight: 600 }}>{fmtDate(dateValue)}</span>;
@@ -116,13 +122,13 @@ function MetricWithStatus({
     } else {
       displayValue = (
         <span style={{ fontWeight: 600 }}>
-          {typeof value === "number" ? fmtNum(value) : value}
+          {typeof value === "number" ? fmtNum(value) : cleanText(String(value))}
           {unit ? ` ${unit}` : ""}
         </span>
       );
     }
   } else {
-    displayValue = <span style={{ color: "var(--text-muted)" }}>Belum tersedia</span>;
+    displayValue = <span style={{ color: "var(--text-muted)" }}>Not Available</span>;
   }
 
   return (
@@ -142,7 +148,7 @@ function MetricWithStatus({
             color: "var(--text-primary)",
           }}
         >
-          {label}
+          {safeLabel}
         </span>
         {status && <StatusBadge status={status} />}
       </div>
@@ -151,7 +157,7 @@ function MetricWithStatus({
       </div>
       {note && (
         <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-          {note}
+          {cleanText(note)}
         </div>
       )}
     </div>
@@ -178,19 +184,18 @@ function SummaryCard({ output }: { output: DssSimulationResponse }) {
             marginBottom: 8,
           }}
         >
-          Ringkasan Hasil Simulasi
+          Simulation Executive Summary
         </div>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(3, 1fr)",
             gap: 16,
           }}
         >
-          <MetricWithStatus label="Total Pendapatan" value={output.Total_Revenue} unit="Rp" />
-          <MetricWithStatus label="Total Biaya Tunai" value={output.Cost_total_cash} unit="Rp" />
-          <MetricWithStatus label="Laba Tunai Bersih" value={output.Profit_net_cash} unit="Rp" />
-          <MetricWithStatus label="Faktor Sistem (F_sys)" value={output.F_sys} />
+          <MetricWithStatus label="Total Gross Revenue" value={output.Total_Revenue} unit="Rp" />
+          <MetricWithStatus label="Total Pure Cash Cost" value={output.Cost_total_cash} unit="Rp" />
+          <MetricWithStatus label="Pure Absorbed Net Cash" value={output.Profit_net_cash} unit="Rp" />
         </div>
       </div>
     </div>
@@ -272,27 +277,27 @@ export default function SimulasiPage({
         dssInput.duck_count == null ||
         dssInput.duck_age_days == null
       ) {
-        setError("Silakan isi semua parameter numerik dengan benar.");
+        setError("Please fill in all numeric parameters accurately.");
         return;
       }
 
       if (dssInput.land_area_are <= 0) {
-        setError("Luas lahan aktif bebek harus lebih dari 0 are.");
+        setError("Active wet area must be greater than 0 are.");
         return;
       }
 
       if (dssInput.duck_count <= 0) {
-        setError("Populasi bibit bebek harus lebih dari 0 ekor.");
+        setError("Duck population must be greater than 0 head.");
         return;
       }
 
       if (dssInput.duck_age_days <= 0) {
-        setError("Umur bebek saat masuk sawah harus lebih dari 0 hari.");
+        setError("Duck age at release must be greater than 0 days.");
         return;
       }
 
       if (needsActualDuckBuyPrice && dssInput.duck_buy_price_rp_per_duck == null) {
-        setError("Harga beli bebek aktual wajib diisi saat umur bebek di luar rentang 14–21 hari.");
+        setError("Actual purchase price per duck is required when age is outside 14–21 days.");
         return;
       }
 
@@ -300,7 +305,7 @@ export default function SimulasiPage({
         dssInput.duck_buy_price_rp_per_duck != null &&
         dssInput.duck_buy_price_rp_per_duck <= 0
       ) {
-        setError("Harga beli bebek aktual harus lebih dari 0 rupiah per ekor.");
+        setError("Actual duck purchase price must be greater than 0.");
         return;
       }
 
@@ -329,7 +334,7 @@ export default function SimulasiPage({
       }
     } catch (err: unknown) {
       const message = (err as { error?: { message?: string } })?.error?.message;
-      setError(message || "Terjadi kesalahan saat menjalankan simulasi.");
+      setError(message || "An error occurred while executing the DSS simulation.");
     } finally {
       setSubmitting(false);
     }
@@ -347,7 +352,7 @@ export default function SimulasiPage({
       >
         <div className="card" style={{ minHeight: 600 }}>
           <div className="card-header">
-            <span className="card-title">Parameter Simulasi</span>
+            <span className="card-title">Simulation Input Parameters</span>
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -367,7 +372,7 @@ export default function SimulasiPage({
                 </div>
               )}
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Luas Lahan Aktif Bebek (are)</div>
+                <div className="obs-input-label">Active Wet Area (are)</div>
                 <input
                   className="obs-input"
                   type="number"
@@ -383,11 +388,11 @@ export default function SimulasiPage({
                   required
                 />
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                  Luas petak sawah aktif yang akan dimasuki bebek, bukan total lahan petani.
+                  Active paddy field area for duck integration (1 are = 100 m²).
                 </div>
               </div>
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Populasi Bibit Bebek (ekor)</div>
+                <div className="obs-input-label">Duck Population (head)</div>
                 <input
                   className="obs-input"
                   type="number"
@@ -404,7 +409,7 @@ export default function SimulasiPage({
                 />
               </div>
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Varietas Padi</div>
+                <div className="obs-input-label">Rice Variety</div>
                 <select
                   className="obs-input"
                   value={dssInput.rice_variety}
@@ -412,7 +417,7 @@ export default function SimulasiPage({
                   disabled={loadingOptions}
                   required
                 >
-                  <option value="">Pilih varietas...</option>
+                  <option value="">Select variety...</option>
                   {options?.rice_varieties.map((variety) => (
                     <option key={variety.code} value={variety.code}>
                       {variety.label}
@@ -421,7 +426,7 @@ export default function SimulasiPage({
                 </select>
               </div>
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Sistem Tanam</div>
+                <div className="obs-input-label">Planting System</div>
                 <select
                   className="obs-input"
                   value={dssInput.planting_system}
@@ -429,7 +434,7 @@ export default function SimulasiPage({
                   disabled={loadingOptions}
                   required
                 >
-                  <option value="">Pilih sistem tanam...</option>
+                  <option value="">Select planting system...</option>
                   {options?.planting_systems.map((system) => (
                     <option key={system.code} value={system.code}>
                       {system.label}
@@ -438,12 +443,12 @@ export default function SimulasiPage({
                 </select>
                 {selectedSystem && (
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                    Batas kepadatan aman: {selectedSystem.k_safe_are} ekor/are.
+                    Safe density threshold: {selectedSystem.k_safe_are} head/are.
                   </div>
                 )}
               </div>
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Tanggal Tanam</div>
+                <div className="obs-input-label">Planting Date</div>
                 <input
                   className="obs-input"
                   type="date"
@@ -453,7 +458,7 @@ export default function SimulasiPage({
                 />
               </div>
               <div className="obs-input-group" style={{ marginBottom: 16 }}>
-                <div className="obs-input-label">Umur Bebek Saat Masuk Sawah (hari)</div>
+                <div className="obs-input-label">Duck Age at Field Entry (days)</div>
                 <input
                   className="obs-input"
                   type="number"
@@ -476,12 +481,12 @@ export default function SimulasiPage({
                     lineHeight: 1.5,
                   }}
                 >
-                  Rentang acuan model 14–21 hari. Umur bebek bisa memengaruhi risiko umur, prediksi hidup, hasil panen, pakan, dan biaya.
+                  Model reference window is 14–21 days. Ontogeny influences survival ceiling and crop trampling risk.
                 </div>
               </div>
               {needsActualDuckBuyPrice && (
                 <div className="obs-input-group" style={{ marginBottom: 20 }}>
-                  <div className="obs-input-label">Harga Beli Bebek Aktual (Rp/ekor)</div>
+                  <div className="obs-input-label">Actual Duck Purchase Price (Rp/head)</div>
                   <input
                     className="obs-input"
                     type="number"
@@ -504,7 +509,7 @@ export default function SimulasiPage({
                       lineHeight: 1.5,
                     }}
                   >
-                    Diisi saat umur bebek di luar 14–21 hari agar biaya pembelian bebek memakai harga aktual petani.
+                    Required for duck age outside the standard 14–21 day baseline window.
                   </div>
                 </div>
               )}
@@ -514,7 +519,7 @@ export default function SimulasiPage({
                 disabled={submitting || loadingOptions}
                 style={{ width: "100%" }}
               >
-                {submitting ? "Menjalankan Simulasi..." : "Jalankan Simulasi DSS"}
+                {submitting ? "Executing DSS Model..." : "Run DSS Simulation"}
               </button>
             </form>
           </div>
@@ -544,16 +549,16 @@ export default function SimulasiPage({
                   marginBottom: 8,
                 }}
               >
-                Hasil Prediksi
+                Prediction Outputs
               </div>
               <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-                Isi parameter dan klik Jalankan Simulasi DSS untuk melihat hasil.
+                Configure parameters on the left and click Run DSS Simulation to calculate models.
               </div>
             </div>
           ) : (
             <div className="card" style={{ minHeight: 600 }}>
               <div className="card-header">
-                <span className="card-title">Ringkasan Operasional</span>
+                <span className="card-title">Operational Summary</span>
               </div>
               <div className="card-body">
                 <div
@@ -563,14 +568,14 @@ export default function SimulasiPage({
                     gap: 16,
                   }}
                 >
-                  <MetricWithStatus label="Kepadatan Input" value={densityInput} unit="ekor/are" />
-                  <MetricWithStatus label="Status Kepadatan" value={STATUS_LABEL[dssOutput.density_status] ?? dssOutput.density_status} />
-                  <MetricWithStatus label="Status Umur Bebek" value={STATUS_LABEL[dssOutput.age_status] ?? dssOutput.age_status} />
-                  <MetricWithStatus label="Prediksi Bebek Hidup" value={dssOutput.N_survive} unit="ekor" />
-                  <MetricWithStatus label="Tanggal Lepas Bebek" dateValue={dssOutput.D_masuk_bebek} />
-                  <MetricWithStatus label="Tanggal Tarik Bebek" dateValue={dssOutput.D_tarik_bebek} />
-                  <MetricWithStatus label="Tanggal Panen Gabah" dateValue={dssOutput.D_panen_gabah} />
-                  <MetricWithStatus label="Total Panen Gabah" value={dssOutput.Yield_total_predict} unit="kg" />
+                  <MetricWithStatus label="Calculated Density" value={densityInput} unit="head/are" />
+                  <MetricWithStatus label="Density Status" value={STATUS_LABEL[dssOutput.density_status] ?? dssOutput.density_status} />
+                  <MetricWithStatus label="Duck Age Status" value={STATUS_LABEL[dssOutput.age_status] ?? dssOutput.age_status} />
+                  <MetricWithStatus label="Predicted Duck Survival" value={dssOutput.N_survive} unit="head" />
+                  <MetricWithStatus label="Duck Release Date" dateValue={dssOutput.D_masuk_bebek} />
+                  <MetricWithStatus label="Duck Withdrawal Date" dateValue={dssOutput.D_tarik_bebek} />
+                  <MetricWithStatus label="Rice Harvest Date" dateValue={dssOutput.D_panen_gabah} />
+                  <MetricWithStatus label="Total Grain Harvest" value={dssOutput.Yield_total_predict} unit="kg" />
                 </div>
               </div>
             </div>
@@ -585,79 +590,42 @@ export default function SimulasiPage({
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <DetailSection title="Operasional & Agronomi">
-              <MetricWithStatus label="Varietas Padi" value={selectedVariety?.label ?? dssInput.rice_variety} />
-              <MetricWithStatus label="Sistem Tanam" value={selectedSystem?.label ?? dssInput.planting_system} />
-              <MetricWithStatus label="Kepadatan Input" value={densityInput} unit="ekor/are" />
-              <MetricWithStatus label="Status Kepadatan" value={STATUS_LABEL[dssOutput.density_status] ?? dssOutput.density_status} />
-              <MetricWithStatus label="Status Umur Bebek" value={STATUS_LABEL[dssOutput.age_status] ?? dssOutput.age_status} />
-              <MetricWithStatus label="Tanggal Lepas Bebek" dateValue={dssOutput.D_masuk_bebek} />
-              <MetricWithStatus label="Tanggal Tarik Bebek" dateValue={dssOutput.D_tarik_bebek} />
-              <MetricWithStatus label="Tanggal Panen Gabah" dateValue={dssOutput.D_panen_gabah} />
-              <MetricWithStatus label="Prediksi Bebek Hidup" value={dssOutput.N_survive} unit="ekor" />
+            <DetailSection title="Agronomic & Operational Parameters">
+              <MetricWithStatus label="Rice Variety" value={selectedVariety?.label ?? dssInput.rice_variety} />
+              <MetricWithStatus label="Planting System" value={selectedSystem?.label ?? dssInput.planting_system} />
+              <MetricWithStatus label="Calculated Density" value={densityInput} unit="head/are" />
+              <MetricWithStatus label="Density Status" value={STATUS_LABEL[dssOutput.density_status] ?? dssOutput.density_status} />
+              <MetricWithStatus label="Duck Age Status" value={STATUS_LABEL[dssOutput.age_status] ?? dssOutput.age_status} />
+              <MetricWithStatus label="Duck Release Date" dateValue={dssOutput.D_masuk_bebek} />
+              <MetricWithStatus label="Duck Withdrawal Date" dateValue={dssOutput.D_tarik_bebek} />
+              <MetricWithStatus label="Rice Harvest Date" dateValue={dssOutput.D_panen_gabah} />
+              <MetricWithStatus label="Predicted Duck Survival" value={dssOutput.N_survive} unit="head" />
             </DetailSection>
 
-            <DetailSection title="Prediksi Panen & Pendapatan">
-              <MetricWithStatus label="Estimasi Panen per Are" value={dssOutput.Yield_are_predict} unit="kg/are" />
-              <MetricWithStatus label="Estimasi Total Panen Gabah" value={dssOutput.Yield_total_predict} unit="kg" />
-              <MetricWithStatus label="Estimasi Penjualan Gabah" value={dssOutput.Revenue_gabah} unit="Rp" />
-              <MetricWithStatus label="Estimasi Penjualan Bebek" value={dssOutput.Revenue_duck} unit="Rp" />
-              <MetricWithStatus label="Total Pendapatan" value={dssOutput.Total_Revenue} unit="Rp" />
+            <DetailSection title="Yield & Revenue Predictions">
+              <MetricWithStatus label="Estimated Grain Yield per Unit Area" value={dssOutput.Yield_are_predict} unit="kg/are" />
+              <MetricWithStatus label="Estimated Total Grain Harvest" value={dssOutput.Yield_total_predict} unit="kg" />
+              <MetricWithStatus label="Estimated Grain Sales Revenue" value={dssOutput.Revenue_gabah} unit="Rp" />
+              <MetricWithStatus label="Estimated Duck Sales Revenue" value={dssOutput.Revenue_duck} unit="Rp" />
+              <MetricWithStatus label="Total Gross Revenue" value={dssOutput.Total_Revenue} unit="Rp" />
             </DetailSection>
 
-            <DetailSection title="Biaya Inti Kas (Core Cash Cost)">
-              <MetricWithStatus label="Biaya Pembelian Bebek" value={dssOutput.Cost_duck_buy} unit="Rp" />
-              <MetricWithStatus label="Total Biaya Tunai" value={dssOutput.Cost_total_cash} unit="Rp" note="Biaya tunai murni hanya pembelian bibit bebek." />
+            <DetailSection title="Pure Cash Cost Circuit (Tier 1)">
+              <MetricWithStatus label="Duck Purchase Cost" value={dssOutput.Cost_duck_buy} unit="Rp" />
+              <MetricWithStatus label="Total Pure Cash Outflow" value={dssOutput.Cost_total_cash} unit="Rp" note="Validated cash outlay strictly comprises livestock acquisition cost." />
             </DetailSection>
 
-            <DetailSection title="Analisis Biaya Non-Tunai / Sandbox (Indikatif)" style={{ 
-              border: "2px dashed var(--accent-amber)", 
-              background: "linear-gradient(135deg, rgba(245,158,11,0.03), rgba(245,158,11,0.01))" 
-            }}>
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 8, 
-                marginBottom: 12, 
-                padding: "8px 12px",
-                background: "rgba(245,158,11,0.1)",
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid rgba(245,158,11,0.3)"
-              }}>
-                <span style={{ fontSize: 14 }}>⚠</span>
-                <span style={{ 
-                  fontSize: 11.5, 
-                  fontWeight: 700, 
-                  color: "var(--accent-amber)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
-                }}>
-                  BIAYA INDIKATIF (SANDBOX) — Tidak mengurangi Laba Tunai Bersih
-                </span>
-              </div>
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(4, 1fr)", 
-                gap: 12 
-              }}>
-                <MetricWithStatus label="Pakan Bebek" value={dssOutput.Cost_feed_isolated} unit="Rp" />
-                <MetricWithStatus label="Penyiangan" value={dssOutput.Cost_weeding_isolated} unit="Rp" />
-                <MetricWithStatus label="Pestisida" value={dssOutput.Cost_pesticide_isolated} unit="Rp" />
-                <MetricWithStatus label="Infrastruktur Total" value={dssOutput.Cost_infra_isolated} unit="Rp" />
-                <MetricWithStatus label="Pupuk Total" value={dssOutput.Cost_fertilizer_isolated} unit="Rp" />
-                <MetricWithStatus label="&nbsp;&nbsp;├─ Urea" value={dssOutput.Cost_fert_urea_isolated} unit="Rp" />
-                <MetricWithStatus label="&nbsp;&nbsp;├─ Phonska" value={dssOutput.Cost_fert_phonska_isolated} unit="Rp" />
-                <MetricWithStatus label="&nbsp;&nbsp;└─ KCl" value={dssOutput.Cost_fert_kcl_isolated} unit="Rp" />
-                <MetricWithStatus label="Infra Jaring" value={dssOutput.Cost_infra_net_isolated} unit="Rp" />
-                <MetricWithStatus label="Infra Kandang" value={dssOutput.Cost_infra_cage_isolated} unit="Rp" />
-              </div>
+            <DetailSection title="Net Financial Absorption Summary">
+              <MetricWithStatus label="Total Gross Revenue" value={dssOutput.Total_Revenue} unit="Rp" />
+              <MetricWithStatus label="Total Cash Cost Outflow" value={dssOutput.Cost_total_cash} unit="Rp" />
+              <MetricWithStatus label="Pure Absorbed Net Cash" value={dssOutput.Profit_net_cash} unit="Rp" note="Hero Financial Metric (Total Gross Revenue minus Cash Outflow)." />
             </DetailSection>
           </div>
 
           {/* SCIENTIFIC VISUALIZATION CHARTS SECTION */}
           <div className="card" style={{ marginTop: 16 }}>
             <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="card-title">📈 Visualisasi Kurva & Grafik Ilmiah (SoT v2)</span>
+              <span className="card-title">📈 High-Fidelity Scientific Charts & Model Visualizations</span>
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   className={`tab-btn ${activeChartTab === "density" ? "active" : ""}`}
@@ -673,7 +641,7 @@ export default function SimulasiPage({
                     border: "1px solid var(--surface-border)",
                   }}
                 >
-                  Kurva Kepadatan (F_density)
+                  Density Curve (F_density)
                 </button>
                 <button
                   className={`tab-btn ${activeChartTab === "age" ? "active" : ""}`}
@@ -689,7 +657,7 @@ export default function SimulasiPage({
                     border: "1px solid var(--surface-border)",
                   }}
                 >
-                  Kurva Risiko Umur (R_age)
+                  Age Vulnerability Curve (R_age)
                 </button>
                 <button
                   className={`tab-btn ${activeChartTab === "cash" ? "active" : ""}`}
@@ -705,7 +673,7 @@ export default function SimulasiPage({
                     border: "1px solid var(--surface-border)",
                   }}
                 >
-                  Breakdown Kas Two-Tier
+                  Financial Waterfall
                 </button>
               </div>
             </div>
@@ -713,13 +681,13 @@ export default function SimulasiPage({
               {activeChartTab === "density" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Kurva hubungan kepadatan bebek (d) terhadap faktor hasil tanaman. 
-                    Menunjukkan zona ideal sistem tanam Jarwo (4 ekor/are) vs Tegel (3 ekor/are) serta ambang saturasi (8 ekor/are).
+                    Cubic spline relationship curve between duck stocking density (head/are) and crop yield multiplier factor.
+                    Annotated with Jarwo (4.0 head/are) vs Tegel (3.0 head/are) safe thresholds and saturation danger zone (&gt;8.0 head/are).
                   </div>
                   <DensityCurveChart 
                     data={vizData?.visualizations?.density_curve ?? vizData?.density_curve ?? dssOutput.charts?.density_series} 
                     currentDensity={densityInput ?? undefined} 
-                    benchmarks={vizData?.reference_benchmarks}
+                    benchmarks={vizData?.reference_benchmarks ?? vizData?.visualizations?.benchmarks}
                   />
                 </div>
               )}
@@ -727,8 +695,8 @@ export default function SimulasiPage({
               {activeChartTab === "age" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Kurva risiko kerusakan tanaman / injakan (R_age) dan peluang hidup (Survival Ceiling) berdasarkan umur bebek (age_days).
-                    Rentang ideal ontogeni: 14–21 hari.
+                    Piecewise ontogeny vulnerability curve (R_age) and duck survival ceiling as a function of entry age.
+                    Optimal model window: 14–21 days post-hatch.
                   </div>
                   <AgeVulnerabilityChart 
                     data={vizData?.visualizations?.age_vulnerability ?? vizData?.age_vulnerability ?? dssOutput.charts?.age_series} 
@@ -740,7 +708,7 @@ export default function SimulasiPage({
               {activeChartTab === "cash" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Visualisasi <strong>Financial Waterfall</strong> (Pendapatan total, alokasi biaya pembelian bebek, dan laba tunai bersih).
+                    Scientific <strong>Financial Waterfall</strong> illustrating gross revenue flow, cash outlays, and net cash absorption.
                   </div>
                   <TwoTierCashBreakdownChart
                     simulationResult={dssOutput}

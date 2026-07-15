@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: Page; label: string }[] = [
-  { id: "simulasi", label: "Simulasi DSS" },
+  { id: "simulasi", label: "DSS Simulation" },
   { id: "history", label: "History" },
 ];
 
@@ -84,7 +84,7 @@ export default function Sidebar({
                 color: "rgba(255,255,255,0.4)",
               }}
             >
-              Memuat sesi…
+              Loading session...
             </div>
           ) : isAuthenticated ? (
             <div>
@@ -128,7 +128,7 @@ export default function Sidebar({
                   e.currentTarget.style.borderColor = "#dc2626";
                 }}
               >
-                Keluar
+                Log Out
               </button>
             </div>
           ) : (
@@ -145,7 +145,7 @@ export default function Sidebar({
                 </div>
                 <div className="sidebar-user-info">
                   <div className="sidebar-user-name">Tamu</div>
-                  <div className="sidebar-user-role">Tidak login</div>
+                  <div className="sidebar-user-role">Not logged in</div>
                 </div>
               </div>
               <button
@@ -167,7 +167,7 @@ export default function Sidebar({
                   boxShadow: "0 2px 8px rgba(22,128,58,0.25)",
                 }}
               >
-                Masuk / Daftar
+                Sign In / Register
               </button>
             </div>
           )}

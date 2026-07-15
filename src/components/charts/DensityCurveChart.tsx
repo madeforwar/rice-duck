@@ -38,10 +38,10 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
       >
         <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)" }}>
-          Data Kurva Kepadatan Tidak Tersedia
+          Density Curve Data Unavailable
         </div>
         <div style={{ fontSize: 12, marginTop: 4 }}>
-          Jalankan simulasi DSS terlebih dahulu untuk memuat data visualisasi kurva ilmiah.
+          Run the DSS simulation to render high-fidelity density curve data.
         </div>
       </div>
     );
@@ -51,16 +51,25 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
   const kSafeJarwo = benchmarks?.k_safe_jarwo ?? 4.0;
   const kMaxSaturation = benchmarks?.k_max_saturation ?? 8.0;
 
+  // Adapt backend data structure cleanly (supports yield_factor_jarwo or jarwo_yield_factor)
+  const chartData = data.map((d) => ({
+    ...d,
+    jarwo_yield: d.yield_factor_jarwo ?? d.jarwo_yield_factor ?? 0,
+    tegel_yield: d.yield_factor_tegel ?? d.tegel_yield_factor ?? 0,
+  }));
+
+  const maxDensity = Math.max(...chartData.map((d) => d.density), 12);
+
   return (
     <div style={{ width: "100%", height: 340 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2ebe3" />
           <XAxis
             dataKey="density"
             type="number"
-            domain={[0, "dataMax"]}
-            unit=" ekor/are"
+            domain={[0, maxDensity]}
+            unit=" head/are"
             stroke="var(--text-secondary)"
             fontSize={12}
           />
@@ -75,7 +84,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
               `${(Number(value) * 100).toFixed(2)}%`,
               String(name ?? ""),
             ]}
-            labelFormatter={(label: unknown) => `Kepadatan (density): ${label} ekor/are`}
+            labelFormatter={(label: unknown) => `Duck Density: ${label} head/are`}
             contentStyle={{
               backgroundColor: "var(--surface-card)",
               borderColor: "var(--surface-border)",
@@ -85,14 +94,14 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
           />
           <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
 
-          {/* ReferenceArea untuk zona bahaya injakan / kelebihan kepadatan (> 8 ekor/are) */}
+          {/* ReferenceArea for saturation / trampling risk zone (> 8 head/are) */}
           <ReferenceArea
             x1={kMaxSaturation}
-            x2={12}
+            x2={maxDensity}
             fill="#fecaca"
             fillOpacity={0.4}
             label={{
-              value: "Zona Bahaya Injakan (> 8 ekor/are)",
+              value: "Trampling Danger Zone (> 8 head/are)",
               position: "insideTopRight",
               fill: "#991b1b",
               fontSize: 11,
@@ -102,8 +111,8 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
 
           <Line
             type="monotone"
-            dataKey="jarwo_yield_factor"
-            name="Faktor Hasil Jarwo (Jajar Legowo)"
+            dataKey="jarwo_yield"
+            name="Jarwo Yield Factor"
             stroke="var(--green-600)"
             strokeWidth={2.5}
             dot={false}
@@ -111,8 +120,8 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
           />
           <Line
             type="monotone"
-            dataKey="tegel_yield_factor"
-            name="Faktor Hasil Tegel"
+            dataKey="tegel_yield"
+            name="Tegel Yield Factor"
             stroke="var(--accent-amber)"
             strokeWidth={2}
             strokeDasharray="5 5"
@@ -120,14 +129,14 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             activeDot={{ r: 5, fill: "var(--accent-amber)" }}
           />
 
-          {/* Reference Lines warna slate-500 (#64748b) untuk benchmark ilmiah */}
+          {/* Reference Lines with slate-500 (#64748b) for academic benchmarks */}
           <ReferenceLine
             x={kSafeTegel}
             stroke="#64748b"
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Tegel (${kSafeTegel})`,
+              value: `Tegel Limit (${kSafeTegel})`,
               position: "top",
               fill: "#64748b",
               fontSize: 11,
@@ -140,7 +149,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Jarwo (${kSafeJarwo})`,
+              value: `Jarwo Safe Limit (${kSafeJarwo})`,
               position: "top",
               fill: "#64748b",
               fontSize: 11,
@@ -153,7 +162,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Saturasi (${kMaxSaturation})`,
+              value: `Saturation (${kMaxSaturation})`,
               position: "top",
               fill: "#64748b",
               fontSize: 11,
@@ -167,7 +176,7 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
               stroke="#2563eb"
               strokeWidth={2}
               label={{
-                value: `Input Saat Ini (${currentDensity})`,
+                value: `Current Input (${currentDensity.toFixed(2)})`,
                 position: "insideTopLeft",
                 fill: "#2563eb",
                 fontSize: 11,

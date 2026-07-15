@@ -160,14 +160,21 @@ export interface DssSandboxOutput {
 
 export interface DensityPoint {
   density: number;
-  jarwo_yield_factor: number;
-  tegel_yield_factor: number;
+  yield_factor_jarwo: number;
+  yield_factor_tegel: number;
+  is_safe_jarwo?: boolean;
+  is_safe_tegel?: boolean;
+  is_over_density?: boolean;
+  // Fallback aliases for legacy client code
+  jarwo_yield_factor?: number;
+  tegel_yield_factor?: number;
 }
 
 export interface AgePoint {
   age_days: number;
   risk_ratio: number;
   survival_ceiling: number;
+  zone?: "red" | "yellow" | "green" | string;
 }
 
 export interface ReferenceBenchmarks {
@@ -182,15 +189,20 @@ export interface FinancialAbsorptionBreakdown {
 }
 
 export interface WaterfallNode {
-  label: string;
-  value: number;
-  node_type: "revenue" | "cost" | "profit" | string;
+  name: string;
+  amount: number;
+  type: "revenue" | "cost" | "total" | string;
+  // Fallback aliases for backward compat
+  label?: string;
+  value?: number;
+  node_type?: string;
 }
 
 export interface VisualizationsObject {
   density_curve: DensityPoint[];
   age_vulnerability: AgePoint[];
   financial_waterfall: WaterfallNode[];
+  benchmarks?: ReferenceBenchmarks;
 }
 
 export interface VisualizationResponse {

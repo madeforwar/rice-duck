@@ -31,7 +31,7 @@ function fmtNum(val: number | null | undefined, decimals = 2) {
 }
 
 function fmtRp(val: number | null | undefined) {
-  if (val === null || val === undefined) return "Belum tersedia";
+  if (val === null || val === undefined) return "Not Available";
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -206,7 +206,7 @@ export default function Topbar({
             </>
           ) : (
           <div style={{ padding: "20px 0", color: "#666", fontSize: 13 }}>
-            Belum ada hasil simulasi. Jalankan simulasi terlebih dahulu sebelum
+            No simulation results yet. Jalankan simulasi terlebih dahulu sebelum
             mencetak laporan.
           </div>
         )}
@@ -237,7 +237,7 @@ export default function Topbar({
             style={{ opacity: 0.6, cursor: "not-allowed" }}
           >
             <span className="btn-export-icon">↗</span>
-            Export PDF (Belum Tersedia)
+            Export PDF (Not Available)
           </button>
         </div>
       </header>

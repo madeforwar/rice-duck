@@ -21,33 +21,35 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
   simulationResult,
   waterfallData,
 }) => {
-  const formatRp = (val: number) => `Rp ${val.toLocaleString("id-ID")}`;
+  const formatRp = (val: number) => `Rp ${val.toLocaleString("en-US")}`;
 
   // If backend provided waterfallData, render Waterfall Chart.
   if (waterfallData && waterfallData.length > 0) {
-    // Zero-Math Policy: Prepare rendering structures for recharts stacked bars
-    // Floating bar requires [transparentBase, visibleValue]
     let runningTotal = 0;
     const chartData = waterfallData.map((item) => {
-      let base = 0;
-      let barVal = item.value;
+      const nodeName = item.name ?? item.label ?? "";
+      const nodeAmount = item.amount ?? item.value ?? 0;
+      const nodeType = item.type ?? item.node_type ?? "cost";
 
-      if (item.node_type === "revenue") {
+      let base = 0;
+      let barVal = nodeAmount;
+
+      if (nodeType === "revenue") {
         base = runningTotal;
-        runningTotal += item.value;
-      } else if (item.node_type === "cost") {
-        runningTotal -= item.value;
+        runningTotal += nodeAmount;
+      } else if (nodeType === "cost") {
+        runningTotal -= nodeAmount;
         base = runningTotal;
-      } else if (item.node_type === "profit") {
+      } else if (nodeType === "total" || nodeType === "profit") {
         base = 0;
-        barVal = item.value;
+        barVal = nodeAmount;
       }
 
       return {
-        label: item.label,
-        value: item.value,
-        node_type: item.node_type,
-        base,
+        name: nodeName,
+        amount: nodeAmount,
+        type: nodeType,
+        base: Math.max(0, base),
         barVal,
       };
     });
@@ -58,7 +60,7 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2ebe3" />
             <XAxis
-              dataKey="label"
+              dataKey="name"
               stroke="var(--text-secondary)"
               fontSize={11}
               tickLine={false}
@@ -66,13 +68,13 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
             <YAxis
               stroke="var(--text-secondary)"
               fontSize={11}
-              tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}rb`}
+              tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip
               formatter={(value: unknown, _name: unknown, entry: unknown) => {
-                const payloadItem = (entry as { payload?: { value?: number } })?.payload;
-                const rawVal = payloadItem?.value ?? Number(value);
-                return [formatRp(rawVal), "Jumlah"];
+                const payloadItem = (entry as { payload?: { amount?: number } })?.payload;
+                const rawVal = payloadItem?.amount ?? Number(value);
+                return [formatRp(rawVal), "Amount"];
               }}
               contentStyle={{
                 backgroundColor: "var(--surface-card)",
@@ -81,16 +83,14 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
                 color: "var(--text-primary)",
               }}
             />
-            <Legend
-              wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
-            />
-            {/* Transparent base bar for floating waterfall effect */}
-            <Bar dataKey="base" stackId="waterfall" fill="transparent" />
-            <Bar dataKey="barVal" stackId="waterfall" radius={[4, 4, 0, 0]}>
+            <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
+            {/* Floating waterfall transparent base */}
+            <Bar dataKey="base" stackId="waterfall" fill="transparent" legendType="none" />
+            <Bar dataKey="barVal" name="Financial Waterfall Flow" stackId="waterfall" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => {
                 let color = "var(--green-600)";
-                if (entry.node_type === "cost") color = "var(--accent-amber)";
-                if (entry.node_type === "profit") color = "var(--green-400)";
+                if (entry.type === "cost") color = "var(--accent-amber)";
+                if (entry.type === "total" || entry.type === "profit") color = "var(--green-400)";
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
             </Bar>
@@ -100,20 +100,13 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
     );
   }
 
-  // Fallback 2-Tier Bar chart if waterfallData is not provided
+  // Pure Cash Liquidity fallback chart (Sandbox costs purged completely)
   const data = [
     {
-      category: "Tier 1: Core Validated (Kas Nyata)",
-      "Pendapatan Total": simulationResult.Total_Revenue,
-      "Biaya Beli Bebek (Kas)": simulationResult.Cost_duck_buy,
-      "Profit Net Kas": simulationResult.Profit_net_cash,
-    },
-    {
-      category: "Tier 2: Sandbox Isolated (Estimasi)",
-      "Biaya Pakan (Shadow)": simulationResult.Cost_feed_isolated || 0,
-      "Biaya Penyiangan (Shadow)": simulationResult.Cost_weeding_isolated || 0,
-      "Biaya Pestisida (Shadow)": simulationResult.Cost_pesticide_isolated || 0,
-      "Biaya Jaring (Shadow)": simulationResult.Cost_infra_net_isolated || 0,
+      category: "Validated Pure Cash Circuit",
+      "Total Revenue": simulationResult.Total_Revenue,
+      "Duck Purchase Cost": simulationResult.Cost_duck_buy,
+      "Pure Absorbed Net Cash": simulationResult.Profit_net_cash,
     },
   ];
 
@@ -131,7 +124,7 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
           <YAxis
             stroke="var(--text-secondary)"
             fontSize={11}
-            tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}rb`}
+            tickFormatter={(v) => `Rp ${(v / 1000).toFixed(0)}k`}
           />
           <Tooltip
             formatter={(value: unknown) => [formatRp(Number(value)), ""]}
@@ -143,13 +136,9 @@ export const TwoTierCashBreakdownChart: React.FC<TwoTierCashBreakdownChartProps>
             }}
           />
           <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
-          <Bar dataKey="Pendapatan Total" fill="var(--green-600)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Biaya Beli Bebek (Kas)" fill="var(--accent-amber)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Profit Net Kas" fill="var(--green-400)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Biaya Pakan (Shadow)" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Biaya Penyiangan (Shadow)" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Biaya Pestisida (Shadow)" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Biaya Jaring (Shadow)" fill="#f1f5f9" stroke="#cbd5e1" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Total Revenue" fill="var(--green-600)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Duck Purchase Cost" fill="var(--accent-amber)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Pure Absorbed Net Cash" fill="var(--green-400)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

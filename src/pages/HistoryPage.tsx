@@ -11,7 +11,7 @@ interface HistoryPageProps {
 
 function formatDateId(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString("id-ID", {
+    return new Date(dateStr).toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -31,9 +31,9 @@ function fmtNum(val: number | null | undefined, suffix = "", precision = 1): str
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("id-ID", {
+    return new Date(dateStr).toLocaleDateString("en-US", {
       day: "numeric",
-      month: "long",
+      month: "short",
       year: "numeric",
     });
   } catch {
@@ -61,7 +61,7 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;
       if (status === 401) setIsGuest(true);
-      else setLoadError("Gagal memuat history. Periksa koneksi ke backend.");
+      else setLoadError("Failed to load history records. Check backend connection.");
     } finally {
       setLoading(false);
     }
@@ -96,13 +96,13 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Hapus history simulasi ini?")) return;
+    if (!window.confirm("Delete this simulation record?")) return;
     setDeletingId(id);
     try {
       await deleteDssHistory(id);
       setHistories((prev) => prev.filter((h) => h.id !== id));
     } catch {
-      alert("Gagal menghapus history. Coba lagi.");
+      alert("Failed to delete history record. Please try again.");
     } finally {
       setDeletingId(null);
     }
@@ -110,10 +110,10 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
 
   const statsToShow = [
     {
-      label: "Total Simulasi",
+      label: "Total Simulations",
       value: isGuest ? "—" : String(histories.length),
-      unit: "sesi",
-      delta: "Tersimpan di akun",
+      unit: "sessions",
+      delta: "Saved in account",
       up: true,
     },
   ];
@@ -129,10 +129,10 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
             marginBottom: 4,
           }}
         >
-          History Simulasi
+          Simulation History
         </h1>
         <p style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
-          Riwayat simulasi DSS padi–bebek yang tersimpan di akun Anda.
+          Historical rice–duck DSS simulation runs linked to your authenticated session.
         </p>
       </div>
 
@@ -153,7 +153,7 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
 
       <div className="card">
         <div className="card-header">
-          <span className="card-title">Riwayat Simulasi</span>
+          <span className="card-title">Saved Simulation Runs</span>
           {!isGuest && !loading && (
             <button
               onClick={() => void loadHistories()}
@@ -184,17 +184,17 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
                   color: "var(--text-primary)",
                 }}
               >
-                Masuk untuk melihat history
+                Sign in to View Simulation History
               </div>
               <div style={{ fontSize: 13 }}>
-                Login dengan akun Anda untuk menyimpan dan mengakses riwayat simulasi DSS.
+                Log in with your credentials to access stored DSS model runs.
               </div>
             </div>
           )}
 
           {loading && !isGuest && (
             <div style={{ textAlign: "center", padding: "28px", color: "var(--text-muted)", fontSize: 13 }}>
-              ⏳ Memuat history...
+              ⏳ Loading simulation history...
             </div>
           )}
 
@@ -216,7 +216,7 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
           {!loading && !isGuest && !loadError && histories.length === 0 && (
             <div style={{ textAlign: "center", padding: "32px 16px", color: "var(--text-muted)", fontSize: 13 }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
-              Belum ada simulasi tersimpan. Jalankan simulasi di halaman <strong>Simulasi DSS</strong> untuk menyimpan history.
+              No saved simulations found. Run a simulation in the <strong>DSS Model</strong> page to save history.
             </div>
           )}
 
@@ -230,11 +230,11 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
                       {varietyLabelByCode[h.summary.rice_variety] ?? h.summary.rice_variety} · {systemLabelByCode[h.summary.planting_system] ?? h.summary.planting_system}
                     </div>
                     <div className="history-item-meta">
-                      <span>🦆 {h.summary.duck_count} ekor</span>
+                      <span>🦆 {h.summary.duck_count} head</span>
                       <span>📐 {fmtNum(h.summary.land_area_are, " are", 1)}</span>
-                      <span>⚖️ {fmtNum(h.summary.actual_density_are, " ekor/are", 2)}</span>
+                      <span>⚖️ {fmtNum(h.summary.actual_density_are, " head/are", 2)}</span>
                       <span>🌾 {fmtNum(h.summary.estimated_total_yield_kg, " kg total", 1)}</span>
-                      <span>Panen: {fmtDate(h.summary.d_panen_gabah)}</span>
+                      <span>Harvest: {fmtDate(h.summary.d_panen_gabah)}</span>
                     </div>
                   </div>
                   <div className="history-item-actions">
@@ -243,7 +243,7 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
                       onClick={() => void handleDelete(h.id)}
                       disabled={deletingId === h.id}
                     >
-                      {deletingId === h.id ? "⏳" : "🗑 Hapus"}
+                      {deletingId === h.id ? "⏳" : "🗑 Delete"}
                     </button>
                   </div>
                 </div>
@@ -265,8 +265,7 @@ export default function HistoryPage({ setPage }: HistoryPageProps) {
           lineHeight: 1.6,
         }}
       >
-        <strong>Catatan:</strong> History hanya tersimpan jika Anda melakukan simulasi dalam kondisi login.
-        Simulasi tanpa login tidak disimpan. Data history bersifat per-akun.
+        <strong>Note:</strong> History is persisted per user account for authenticated sessions.
       </div>
     </div>
   );
