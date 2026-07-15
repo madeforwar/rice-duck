@@ -9,7 +9,6 @@ import {
   Tooltip,
   ReferenceLine,
   ReferenceArea,
-  Legend,
   Label,
 } from "recharts";
 import type { DensityPoint, ReferenceBenchmarks } from "../../types/api";
@@ -86,143 +85,128 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
   const maxDensity = Math.max(...chartData.map((d) => d.density), 12);
 
   return (
-    <div style={{ width: "100%", height: 380 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 35, right: 45, left: 25, bottom: 45 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-          <XAxis
-            dataKey="density"
-            type="number"
-            domain={[0, maxDensity]}
-            stroke="#64748b"
-            fontSize={11}
-            tickLine={false}
-            tickMargin={12}
-          >
-            <Label
-              value="Stocking Density (ducks/are)"
-              position="insideBottom"
-              offset={-25}
-              fill="#475569"
-              fontSize={13}
-              style={{ fontWeight: 500 }}
+    <div className="w-full">
+      <div style={{ width: "100%", height: 320 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 25, right: 35, left: 20, bottom: 35 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis
+              dataKey="density"
+              type="number"
+              domain={[0, maxDensity]}
+              stroke="#64748b"
+              tickLine={false}
+              tickMargin={10}
+              interval="preserveStartEnd"
+              tick={{ fontSize: 12, fill: "#475569" }}
+            >
+              <Label
+                value="Density (ducks/are)"
+                position="insideBottom"
+                offset={-20}
+                fill="#475569"
+                fontSize={12}
+                style={{ fontWeight: 600 }}
+              />
+            </XAxis>
+            <YAxis
+              stroke="#64748b"
+              tickLine={false}
+              tickMargin={10}
+              tick={{ fontSize: 12, fill: "#475569" }}
+              tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+              domain={[0, "auto"]}
             />
-          </XAxis>
-          <YAxis
-            stroke="#64748b"
-            fontSize={11}
-            tickLine={false}
-            tickMargin={12}
-            tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-            domain={[0, "auto"]}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            verticalAlign="bottom"
-            height={40}
-            wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
-            iconType="circle"
-          />
+            <Tooltip content={<CustomTooltip />} />
 
-          {/* ReferenceArea for saturation / trampling risk zone (> 8 head/are) */}
-          <ReferenceArea
-            x1={kMaxSaturation}
-            x2={maxDensity}
-            fill="#fecaca"
-            fillOpacity={0.3}
-            label={{
-              value: "Destructive Trampling Threshold",
-              position: "insideTopRight",
-              fill: "#991b1b",
-              fontSize: 10,
-              fontWeight: 600,
-            }}
-          />
+            {/* ReferenceArea for saturation / trampling risk zone (> 8 head/are) */}
+            <ReferenceArea
+              x1={kMaxSaturation}
+              x2={maxDensity}
+              fill="#fecaca"
+              fillOpacity={0.3}
+            />
 
-          <Line
-            type="monotone"
-            dataKey="jarwo_yield"
-            name="Biological Yield Modifier (Legowo 2:1)"
-            stroke="#16a34a"
-            strokeWidth={2.5}
-            dot={false}
-            activeDot={{ r: 6, fill: "#16a34a" }}
-          />
-          <Line
-            type="monotone"
-            dataKey="tegel_yield"
-            name="Biological Yield Modifier (Tegel)"
-            stroke="#d97706"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={false}
-            activeDot={{ r: 5, fill: "#d97706" }}
-          />
-
-          {/* Reference Lines with slate-500 (#64748b) for academic benchmarks */}
-          <ReferenceLine
-            x={kSafeTegel}
-            stroke="#94a3b8"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
-            label={{
-              value: `Tegel Safe Carrying Capacity Limit (${kSafeTegel} ducks/are)`,
-              position: "top",
-              fill: "#64748b",
-              fontSize: 10,
-              fontWeight: "600",
-              dy: -12,
-              dx: 5,
-            }}
-          />
-          <ReferenceLine
-            x={kSafeJarwo}
-            stroke="#94a3b8"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
-            label={{
-              value: `Legowo 2:1 Safe Carrying Capacity Limit (${kSafeJarwo} ducks/are)`,
-              position: "top",
-              fill: "#64748b",
-              fontSize: 10,
-              fontWeight: "600",
-              dy: -12,
-              dx: 5,
-            }}
-          />
-          <ReferenceLine
-            x={kMaxSaturation}
-            stroke="#ef4444"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
-            label={{
-              value: `Maximum Trampling Saturation Threshold (${kMaxSaturation} ducks/are)`,
-              position: "top",
-              fill: "#dc2626",
-              fontSize: 10,
-              fontWeight: "600",
-              dy: -12,
-              dx: 5,
-            }}
-          />
-
-          {currentDensity !== undefined && (
-            <ReferenceLine
-              x={currentDensity}
-              stroke="#2563eb"
+            <Line
+              type="monotone"
+              dataKey="jarwo_yield"
+              name="Yield (Jarwo)"
+              stroke="#16a34a"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 6, fill: "#16a34a" }}
+            />
+            <Line
+              type="monotone"
+              dataKey="tegel_yield"
+              name="Yield (Tegel)"
+              stroke="#d97706"
               strokeWidth={2}
-              label={{
-                value: `Current Input (${currentDensity.toFixed(2)} ducks/are)`,
-                position: "insideTopLeft",
-                fill: "#2563eb",
-                fontSize: 11,
-                fontWeight: "bold",
-                dy: 15,
-              }}
+              strokeDasharray="5 5"
+              dot={false}
+              activeDot={{ r: 5, fill: "#d97706" }}
             />
-          )}
-        </LineChart>
-      </ResponsiveContainer>
+
+            {/* Reference Lines without inner text labels to avoid collisions */}
+            <ReferenceLine
+              x={kSafeTegel}
+              stroke="#94a3b8"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+            <ReferenceLine
+              x={kSafeJarwo}
+              stroke="#16a34a"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+            <ReferenceLine
+              x={kMaxSaturation}
+              stroke="#ef4444"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+
+            {currentDensity !== undefined && (
+              <ReferenceLine
+                x={currentDensity}
+                stroke="#2563eb"
+                strokeWidth={2}
+              />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* External HTML Legend */}
+      <div className="mt-4 p-4 bg-slate-50/50 border border-slate-200 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-600">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-emerald-600 flex-shrink-0"></span>
+          <span><strong>Yield (Jarwo):</strong> Jajar Legowo 2:1 biological yield modifier curve.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full border-2 border-amber-600 bg-amber-100 flex-shrink-0"></span>
+          <span><strong>Yield (Tegel):</strong> Standard Tegel layout biological yield modifier curve.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-slate-400 border border-slate-500 flex-shrink-0"></span>
+          <span><strong>Tegel Limit ({kSafeTegel}/are):</strong> Safe carrying capacity for Tegel.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-emerald-500 flex-shrink-0"></span>
+          <span><strong>Jarwo Limit ({kSafeJarwo}/are):</strong> Safe carrying capacity for Jarwo.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-red-500 flex-shrink-0"></span>
+          <span><strong>Max Limit ({kMaxSaturation}/are):</strong> Saturation trampling threshold.</span>
+        </div>
+        {currentDensity !== undefined && (
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded bg-blue-600 flex-shrink-0"></span>
+            <span><strong>Current Input ({currentDensity.toFixed(1)}/are):</strong> Active simulation density.</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
