@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { Page } from "../types";
-import { simulateDss, getDssOptions } from "../services/dss";
+import { simulateDss, getDssOptions, getDssVisualization } from "../services/dss";
 import type {
   DssSimulationInputState,
   DssSimulationRequest,
   DssSimulationResponse,
+  VisualizationResponse,
   RiceVarietyOption,
   PlantingSystemOption,
 } from "../types/api";
@@ -203,6 +204,7 @@ export default function SimulasiPage({
   setDssOutput,
 }: SimulasiPageProps) {
   const [activeChartTab, setActiveChartTab] = useState<"density" | "age" | "cash">("density");
+  const [vizData, setVizData] = useState<VisualizationResponse | null>(null);
   const [options, setOptions] = useState<{
     rice_varieties: RiceVarietyOption[];
     planting_systems: PlantingSystemOption[];
@@ -309,8 +311,22 @@ export default function SimulasiPage({
         duck_age_days: dssInput.duck_age_days,
       };
 
-      const result = await simulateDss(payload);
-      setDssOutput(result);
+      const [simResult, vizResult] = await Promise.allSettled([
+        simulateDss(payload),
+        getDssVisualization(payload),
+      ]);
+
+      if (simResult.status === "fulfilled") {
+        setDssOutput(simResult.value);
+      } else {
+        throw simResult.reason;
+      }
+
+      if (vizResult.status === "fulfilled") {
+        setVizData(vizResult.value);
+      } else {
+        console.error("Failed to fetch visualization:", vizResult.reason);
+      }
     } catch (err: unknown) {
       const message = (err as { error?: { message?: string } })?.error?.message;
       setError(message || "Terjadi kesalahan saat menjalankan simulasi.");
@@ -697,12 +713,13 @@ export default function SimulasiPage({
               {activeChartTab === "density" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Kurva hubungan kepadatan bebek (d) terhadap indeks manfaat biologis (F_density_bio). 
+                    Kurva hubungan kepadatan bebek (d) terhadap faktor hasil tanaman. 
                     Menunjukkan zona ideal sistem tanam Jarwo (4 ekor/are) vs Tegel (3 ekor/are) serta ambang saturasi (8 ekor/are).
                   </div>
                   <DensityCurveChart 
-                    data={dssOutput.charts?.density_series} 
+                    data={vizData?.visualizations?.density_curve ?? vizData?.density_curve ?? dssOutput.charts?.density_series} 
                     currentDensity={densityInput ?? undefined} 
+                    benchmarks={vizData?.reference_benchmarks}
                   />
                 </div>
               )}
@@ -710,11 +727,11 @@ export default function SimulasiPage({
               {activeChartTab === "age" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Kurva risiko kerusakan tanaman / injakan (R_age) berdasarkan umur bebek saat dimasukkan ke sawah (U_duck).
+                    Kurva risiko kerusakan tanaman / injakan (R_age) dan peluang hidup (Survival Ceiling) berdasarkan umur bebek (age_days).
                     Rentang ideal ontogeni: 14–21 hari.
                   </div>
                   <AgeVulnerabilityChart 
-                    data={dssOutput.charts?.age_series} 
+                    data={vizData?.visualizations?.age_vulnerability ?? vizData?.age_vulnerability ?? dssOutput.charts?.age_series} 
                     currentAge={dssInput.duck_age_days ?? undefined} 
                   />
                 </div>
@@ -723,9 +740,12 @@ export default function SimulasiPage({
               {activeChartTab === "cash" && (
                 <div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-                    Perbandingan visual antara <strong>Tier 1: Core Validated (Kas Nyata)</strong> dan <strong>Tier 2: Sandbox Isolated (Estimasi)</strong>.
+                    Visualisasi <strong>Financial Waterfall</strong> (Pendapatan total, alokasi biaya pembelian bebek, dan laba tunai bersih).
                   </div>
-                  <TwoTierCashBreakdownChart simulationResult={dssOutput} />
+                  <TwoTierCashBreakdownChart
+                    simulationResult={dssOutput}
+                    waterfallData={vizData?.visualizations?.financial_waterfall}
+                  />
                 </div>
               )}
             </div>

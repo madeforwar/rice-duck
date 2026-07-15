@@ -4,6 +4,7 @@ import type {
   DssSimulationRequest,
   DssSimulationResponse,
   HistoryListResponse,
+  VisualizationResponse,
 } from "../types/api";
 
 const DSS_PREFIX = "/api/v1/dss";
@@ -21,6 +22,21 @@ export function simulateDss(payload: DssSimulationRequest) {
   };
 
   return apiFetch<DssSimulationResponse>(`${DSS_PREFIX}/simulate`, {
+    method: "POST",
+    authMode: "optional",
+    body: JSON.stringify(normalizedPayload),
+  });
+}
+
+export function getDssVisualization(payload: DssSimulationRequest) {
+  const normalizedPayload = {
+    ...payload,
+    ...(payload.duck_buy_price_rp_per_duck == null
+      ? {}
+      : { duck_buy_price_rp_per_duck: payload.duck_buy_price_rp_per_duck }),
+  };
+
+  return apiFetch<VisualizationResponse>(`${DSS_PREFIX}/visualize`, {
     method: "POST",
     authMode: "optional",
     body: JSON.stringify(normalizedPayload),

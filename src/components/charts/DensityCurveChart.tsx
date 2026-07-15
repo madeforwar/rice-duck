@@ -8,31 +8,56 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceArea,
   Legend,
 } from "recharts";
-import type { DensityDataPoint } from "../../types/api";
+import type { DensityPoint, ReferenceBenchmarks } from "../../types/api";
 
 interface DensityCurveChartProps {
-  data?: DensityDataPoint[];
+  data?: DensityPoint[];
   currentDensity?: number;
+  benchmarks?: ReferenceBenchmarks;
 }
 
-export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({ data, currentDensity }) => {
+export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
+  data,
+  currentDensity,
+  benchmarks,
+}) => {
   if (!data || data.length === 0) {
     return (
-      <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)" }}>
-        Data kurva kepadatan tidak tersedia
+      <div
+        style={{
+          padding: "48px 24px",
+          textAlign: "center",
+          color: "var(--text-muted)",
+          background: "var(--surface-muted)",
+          borderRadius: "var(--radius-sm)",
+          border: "1px dashed var(--surface-border)",
+        }}
+      >
+        <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)" }}>
+          Data Kurva Kepadatan Tidak Tersedia
+        </div>
+        <div style={{ fontSize: 12, marginTop: 4 }}>
+          Jalankan simulasi DSS terlebih dahulu untuk memuat data visualisasi kurva ilmiah.
+        </div>
       </div>
     );
   }
 
+  const kSafeTegel = benchmarks?.k_safe_tegel ?? 3.0;
+  const kSafeJarwo = benchmarks?.k_safe_jarwo ?? 4.0;
+  const kMaxSaturation = benchmarks?.k_max_saturation ?? 8.0;
+
   return (
-    <div style={{ width: "100%", height: 320 }}>
+    <div style={{ width: "100%", height: 340 }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2ebe3" />
           <XAxis
-            dataKey="d"
+            dataKey="density"
             type="number"
             domain={[0, "dataMax"]}
             unit=" ekor/are"
@@ -43,14 +68,14 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({ data, curr
             stroke="var(--text-secondary)"
             fontSize={12}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-            domain={["auto", "auto"]}
+            domain={[0, "auto"]}
           />
           <Tooltip
-            formatter={(value: unknown) => [
+            formatter={(value: unknown, name: unknown) => [
               `${(Number(value) * 100).toFixed(2)}%`,
-              "F_density_bio",
+              String(name ?? ""),
             ]}
-            labelFormatter={(label: unknown) => `Kepadatan (d): ${label} ekor/are`}
+            labelFormatter={(label: unknown) => `Kepadatan (density): ${label} ekor/are`}
             contentStyle={{
               backgroundColor: "var(--surface-card)",
               borderColor: "var(--surface-border)",
@@ -59,48 +84,83 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({ data, curr
             }}
           />
           <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+
+          {/* ReferenceArea untuk zona bahaya injakan / kelebihan kepadatan (> 8 ekor/are) */}
+          <ReferenceArea
+            x1={kMaxSaturation}
+            x2={12}
+            fill="#fecaca"
+            fillOpacity={0.4}
+            label={{
+              value: "Zona Bahaya Injakan (> 8 ekor/are)",
+              position: "insideTopRight",
+              fill: "#991b1b",
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          />
+
           <Line
             type="monotone"
-            dataKey="f_density"
-            name="F_density_bio (Faktor Biologis)"
+            dataKey="jarwo_yield_factor"
+            name="Faktor Hasil Jarwo (Jajar Legowo)"
             stroke="var(--green-600)"
             strokeWidth={2.5}
             dot={false}
             activeDot={{ r: 6, fill: "var(--green-500)" }}
           />
-          <ReferenceLine
-            x={3}
+          <Line
+            type="monotone"
+            dataKey="tegel_yield_factor"
+            name="Faktor Hasil Tegel"
             stroke="var(--accent-amber)"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={false}
+            activeDot={{ r: 5, fill: "var(--accent-amber)" }}
+          />
+
+          {/* Reference Lines warna slate-500 (#64748b) untuk benchmark ilmiah */}
+          <ReferenceLine
+            x={kSafeTegel}
+            stroke="#64748b"
             strokeDasharray="4 4"
+            strokeWidth={1.5}
             label={{
-              value: "Tegel (3.0)",
+              value: `Tegel (${kSafeTegel})`,
               position: "top",
-              fill: "var(--accent-amber)",
+              fill: "#64748b",
               fontSize: 11,
+              fontWeight: 500,
             }}
           />
           <ReferenceLine
-            x={4}
-            stroke="var(--green-500)"
+            x={kSafeJarwo}
+            stroke="#64748b"
             strokeDasharray="4 4"
+            strokeWidth={1.5}
             label={{
-              value: "Jarwo (4.0)",
+              value: `Jarwo (${kSafeJarwo})`,
               position: "top",
-              fill: "var(--green-500)",
+              fill: "#64748b",
               fontSize: 11,
+              fontWeight: 500,
             }}
           />
           <ReferenceLine
-            x={8}
-            stroke="var(--accent-red)"
+            x={kMaxSaturation}
+            stroke="#64748b"
             strokeDasharray="4 4"
+            strokeWidth={1.5}
             label={{
-              value: "Saturasi (8.0)",
+              value: `Saturasi (${kMaxSaturation})`,
               position: "top",
-              fill: "var(--accent-red)",
+              fill: "#64748b",
               fontSize: 11,
+              fontWeight: 500,
             }}
           />
+
           {currentDensity !== undefined && (
             <ReferenceLine
               x={currentDensity}

@@ -158,19 +158,56 @@ export interface DssSandboxOutput {
   Cost_fert_kcl_isolated: number;
 }
 
-export interface DensityDataPoint {
-  d: number;
-  f_density: number;
+export interface DensityPoint {
+  density: number;
+  jarwo_yield_factor: number;
+  tegel_yield_factor: number;
 }
 
-export interface AgeDataPoint {
-  u: number;
-  r_age: number;
+export interface AgePoint {
+  age_days: number;
+  risk_ratio: number;
+  survival_ceiling: number;
 }
+
+export interface ReferenceBenchmarks {
+  k_safe_jarwo: number;
+  k_safe_tegel: number;
+  k_max_saturation: number;
+}
+
+export interface FinancialAbsorptionBreakdown {
+  core_validated_liquid_cash: number;
+  empirically_uncorrelated_isolated_shadow_costs: number;
+}
+
+export interface WaterfallNode {
+  label: string;
+  value: number;
+  node_type: "revenue" | "cost" | "profit" | string;
+}
+
+export interface VisualizationsObject {
+  density_curve: DensityPoint[];
+  age_vulnerability: AgePoint[];
+  financial_waterfall: WaterfallNode[];
+}
+
+export interface VisualizationResponse {
+  density_curve: DensityPoint[];
+  age_vulnerability: AgePoint[];
+  reference_benchmarks: ReferenceBenchmarks;
+  financial_absorption: FinancialAbsorptionBreakdown;
+  visualizations?: VisualizationsObject;
+}
+
+// Deprecated legacy aliases kept for backward safety
+export type DensityDataPoint = DensityPoint;
+export type AgeDataPoint = AgePoint;
 
 export interface DssSimulationCharts {
-  density_series?: DensityDataPoint[];
-  age_series?: AgeDataPoint[];
+  density_series?: DensityPoint[];
+  age_series?: AgePoint[];
 }
 
 // Combined Response — matches backend DSSSimulationResponse exactly
