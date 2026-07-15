@@ -10,6 +10,7 @@ import {
   ReferenceLine,
   ReferenceArea,
   Legend,
+  Label,
 } from "recharts";
 import type { DensityPoint, ReferenceBenchmarks } from "../../types/api";
 
@@ -18,6 +19,30 @@ interface DensityCurveChartProps {
   currentDensity?: number;
   benchmarks?: ReferenceBenchmarks;
 }
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-md p-3 shadow-md text-xs font-sans">
+      <p className="font-semibold text-slate-800 border-b border-slate-100 pb-1.5 mb-2">
+        Stocking Density: <span className="text-emerald-700 font-mono">{label} ducks/are</span>
+      </p>
+      <div className="space-y-1.5">
+        {payload.map((entry: any, index: number) => (
+          <div key={`item-${index}`} className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 text-slate-600">
+              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: entry.color }} />
+              {entry.name}:
+            </span>
+            <span className="font-semibold font-mono text-slate-900">
+              {(Number(entry.value) * 100).toFixed(2)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
   data,
@@ -61,50 +86,51 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
   const maxDensity = Math.max(...chartData.map((d) => d.density), 12);
 
   return (
-    <div style={{ width: "100%", height: 340 }}>
+    <div style={{ width: "100%", height: 350 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2ebe3" />
+        <LineChart data={chartData} margin={{ top: 25, right: 30, left: 15, bottom: 25 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="density"
             type="number"
             domain={[0, maxDensity]}
-            unit=" head/are"
-            stroke="var(--text-secondary)"
-            fontSize={12}
-          />
+            stroke="#64748b"
+            fontSize={11}
+            tickLine={false}
+          >
+            <Label
+              value="Stocking Density (ducks/are)"
+              position="insideBottom"
+              offset={-15}
+              fill="#475569"
+              fontSize={12}
+              style={{ fontWeight: 500 }}
+            />
+          </XAxis>
           <YAxis
-            stroke="var(--text-secondary)"
-            fontSize={12}
+            stroke="#64748b"
+            fontSize={11}
+            tickLine={false}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
             domain={[0, "auto"]}
           />
-          <Tooltip
-            formatter={(value: unknown, name: unknown) => [
-              `${(Number(value) * 100).toFixed(2)}%`,
-              String(name ?? ""),
-            ]}
-            labelFormatter={(label: unknown) => `Duck Density: ${label} head/are`}
-            contentStyle={{
-              backgroundColor: "var(--surface-card)",
-              borderColor: "var(--surface-border)",
-              borderRadius: "var(--radius-sm)",
-              color: "var(--text-primary)",
-            }}
+          <Tooltip content={<CustomTooltip />} />
+          <Legend
+            wrapperStyle={{ fontSize: "12px", paddingTop: "15px" }}
+            iconType="circle"
           />
-          <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
 
           {/* ReferenceArea for saturation / trampling risk zone (> 8 head/are) */}
           <ReferenceArea
             x1={kMaxSaturation}
             x2={maxDensity}
             fill="#fecaca"
-            fillOpacity={0.4}
+            fillOpacity={0.3}
             label={{
-              value: "Trampling Danger Zone (> 8 head/are)",
+              value: "Destructive Trampling Threshold",
               position: "insideTopRight",
               fill: "#991b1b",
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 600,
             }}
           />
@@ -112,61 +138,64 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
           <Line
             type="monotone"
             dataKey="jarwo_yield"
-            name="Jarwo Yield Factor"
-            stroke="var(--green-600)"
+            name="Biological Yield Index (Jarwo)"
+            stroke="#16a34a"
             strokeWidth={2.5}
             dot={false}
-            activeDot={{ r: 6, fill: "var(--green-500)" }}
+            activeDot={{ r: 6, fill: "#16a34a" }}
           />
           <Line
             type="monotone"
             dataKey="tegel_yield"
-            name="Tegel Yield Factor"
-            stroke="var(--accent-amber)"
+            name="Biological Yield Index (Tegel)"
+            stroke="#d97706"
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={false}
-            activeDot={{ r: 5, fill: "var(--accent-amber)" }}
+            activeDot={{ r: 5, fill: "#d97706" }}
           />
 
           {/* Reference Lines with slate-500 (#64748b) for academic benchmarks */}
           <ReferenceLine
             x={kSafeTegel}
-            stroke="#64748b"
+            stroke="#94a3b8"
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Tegel Limit (${kSafeTegel})`,
+              value: `Tegel Safe Capacity (${kSafeTegel} ducks/are)`,
               position: "top",
               fill: "#64748b",
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 500,
+              dy: -5,
             }}
           />
           <ReferenceLine
             x={kSafeJarwo}
-            stroke="#64748b"
+            stroke="#94a3b8"
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Jarwo Safe Limit (${kSafeJarwo})`,
+              value: `Jarwo Safe Capacity (${kSafeJarwo} ducks/are)`,
               position: "top",
               fill: "#64748b",
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 500,
+              dy: -5,
             }}
           />
           <ReferenceLine
             x={kMaxSaturation}
-            stroke="#64748b"
+            stroke="#ef4444"
             strokeDasharray="4 4"
             strokeWidth={1.5}
             label={{
-              value: `Saturation (${kMaxSaturation})`,
+              value: `Saturation Limit (${kMaxSaturation} ducks/are)`,
               position: "top",
-              fill: "#64748b",
-              fontSize: 11,
+              fill: "#dc2626",
+              fontSize: 10,
               fontWeight: 500,
+              dy: -5,
             }}
           />
 
@@ -176,11 +205,12 @@ export const DensityCurveChart: React.FC<DensityCurveChartProps> = ({
               stroke="#2563eb"
               strokeWidth={2}
               label={{
-                value: `Current Input (${currentDensity.toFixed(2)})`,
+                value: `Current Input (${currentDensity.toFixed(2)} ducks/are)`,
                 position: "insideTopLeft",
                 fill: "#2563eb",
                 fontSize: 11,
                 fontWeight: "bold",
+                dy: 15,
               }}
             />
           )}
