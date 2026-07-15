@@ -23,8 +23,6 @@ export type BackendStatus =
   | "data-collection-fallback"
   | "limitation";
 
-export type ProfitDataPurity = "local-calibrated" | "mixed" | "literature-uncalibrated";
-
 export interface BackendErrorIssue {
   field: string;
   message: string;
@@ -80,9 +78,19 @@ export interface DssSimulationRequest {
   duck_buy_price_rp_per_duck?: number | null;
 }
 
+export type DssSimulationInputState = Omit<
+  DssSimulationRequest,
+  "duck_count" | "land_area_are" | "duck_age_days"
+> & {
+  duck_count: number | null;
+  land_area_are: number | null;
+  duck_age_days: number | null;
+};
+
 export interface RiceVarietyOption {
   code: string;
   label: string;
+  hst_panen: number;
   hst_masuk: number;
   hst_heading: number;
   harvest_age_days: number;
@@ -95,9 +103,11 @@ export interface RiceVarietyOption {
 export interface PlantingSystemOption {
   code: string;
   label: string;
+  k_safe_are: number;
+  F_sys: number;
+  note: string;
   k_max_are: number;
   f_yield: number;
-  note: string;
   k_max_range_are: Record<string, number>;
   limited_test_max_are: number | null;
   k_max_status: BackendStatus | string;
@@ -109,323 +119,51 @@ export interface DssOptionsResponse {
   planting_systems: PlantingSystemOption[];
 }
 
-export interface LookupParameterMeta {
-  value: number | string | null;
-  unit: string;
-  source: string;
-  status: BackendStatus;
-  note: string;
-  min: number | null;
-  max: number | null;
-  limited_test_max?: number | null;
+/**
+ * SoT v2 — Two-Tier Output Architecture
+ * Tier 1: Core Validated Output (Active Circuit) — Cash Liquidity Only
+ * Tier 2: Empirically Uncorrelated Isolated Output (Sandbox Circuit) — Indicative Only
+ */
+
+// Tier 1: Core Validated Output Group
+export interface DssCoreOutput {
+  density_status: string;
+  age_status: string;
+  D_masuk_bebek: string;
+  D_tarik_bebek: string;
+  D_panen_gabah: string;
+  N_survive: number;
+  Yield_are_predict: number;
+  Yield_total_predict: number;
+  Revenue_gabah: number;
+  Revenue_duck: number;
+  Total_Revenue: number;
+  Cost_duck_buy: number;
+  Cost_total_cash: number; // = Cost_duck_buy (pure cash cost)
+  Profit_net_cash: number; // HERO METRIC = Total_Revenue - Cost_total_cash
+  F_sys: number;
 }
 
-export interface ScenarioYield {
-  kg_per_ha: number;
-  kg_per_are: number;
-  ton_per_ha: number;
-  estimated_total_kg: number;
+// Tier 2: Empirically Uncorrelated Isolated Output Group (Sandbox)
+export interface DssSandboxOutput {
+  Cost_feed_isolated: number;
+  Cost_weeding_isolated: number;
+  Cost_pesticide_isolated: number;
+  Cost_infra_isolated: number;
+  Cost_fertilizer_isolated: number;
+  Cost_infra_net_isolated: number;
+  Cost_infra_cage_isolated: number;
+  Cost_fert_urea_isolated: number;
+  Cost_fert_phonska_isolated: number;
+  Cost_fert_kcl_isolated: number;
 }
 
-export interface DuckAgeAssessment {
-  duck_age_days: number;
-  u_status: string;
-  c_age: number;
-  p_duck_buy_age_rp: number | null;
-  p_duck_buy_age_source: string;
-  p_duck_buy_age_status: BackendStatus | string;
-  requires_actual_duck_buy_price: boolean;
-  note: string;
-}
-
-export interface DurationConstraintSummary {
-  t_max_eff_days: number;
-  hst_phase_limit_days: number;
-  t_age_max_days: number;
-  t_maks_rekomendasi_days: number;
-  u_target_out_max_days: number;
-}
-
-export interface QualityOutput {
-  q_output: "High" | "Medium" | "Low" | string;
-  score: number;
-  components: Record<string, number>;
-  notes: string[];
-}
-
-export interface ActualScenario {
-  duck_count: number;
-  land_area_are: number;
-  land_area_ha: number;
-  land_area_ha_note?: number | null;
-  density_are: number;
-  density_ha: number;
-  density_lit_ha?: number | null;
-  duration_days: number;
-  release_date: string;
-  pull_date: string;
-  t_age_max_days?: number | null;
-  t_maks_rekomendasi_days?: number | null;
-  surviving_ducks: number;
-  dung_total_per_duck_kg: number;
-  dung_status: BackendStatus | string;
-  effective_duration_days: number;
-  x_base_kg_per_ha: number;
-  x_base_kg_are?: number | null;
-  penalty_rate: number;
-  x_penalized_kg_per_ha: number;
-  x_penalized_kg_are?: number | null;
-  predicted_yield: ScenarioYield;
-  risk_status: string;
-  rey: number | null;
-  rey_status: string;
-  rey_notes: string;
-}
-
-export interface RecommendedScenario {
-  recommended_duck_count: number;
-  recommended_density_are: number;
-  recommended_density_ha: number;
-  recommended_density_lit_ha?: number | null;
-  recommended_duration_days: number;
-  recommended_release_date: string;
-  recommended_pull_date: string;
-  t_age_max_days?: number | null;
-  t_maks_rekomendasi_days?: number | null;
-  surviving_ducks: number;
-  dung_total_per_duck_kg: number;
-  dung_status: BackendStatus | string;
-  effective_duration_days: number;
-  x_base_kg_per_ha: number;
-  x_base_kg_are?: number | null;
-  penalty_rate: number;
-  x_penalized_kg_per_ha: number;
-  x_penalized_kg_are?: number | null;
-  predicted_yield: ScenarioYield;
-  risk_status: string;
-  reasoning_summary: string;
-  rey: number | null;
-  rey_status: string;
-  rey_notes: string;
-}
-
-export interface OptimalityAssessment {
-  is_optimal: boolean;
-  score_safety: boolean;
-  density_gap_ratio: number | null;
-  density_gap_within_threshold: boolean | null;
-  delta_yield_pct: number | null;
-  delta_yield_within_threshold: boolean | null;
-  delta_profit_ratio: number | null;
-  delta_profit_within_threshold: boolean | null;
-  profit_component_included: boolean;
-  optimality_basis: string;
-  catatan_kalibrasi: string;
-  thresholds: Record<string, number>;
-  threshold_status: BackendStatus | string;
-  sumber_data: BackendStatus | string;
-  profit_data_purity: ProfitDataPurity;
-}
-
-export interface ComparisonBlock {
-  duck_count_difference: number;
-  density_difference_are: number;
-  yield_difference_kg_per_ha: number;
-  yield_difference_total_kg: number;
-  risk_change: string;
-  profit_difference_rp: number | null;
-}
-
-export interface RiskBlock {
-  actual_status: string;
-  recommended_status: string;
-  density_risk: string;
-  phase_risk: string;
-  feed_warning: string;
-  survival_data_warning: string;
-  thresholds: Record<string, number>;
-  notes: string[];
-}
-
-export interface EconomicsInfrastructure {
-  status: string;
-  net_cost_per_cycle_rp: number;
-  shelter_cost_per_cycle_rp: number;
-  maintenance_cost_rp: number;
-  total_infrastructure_cost_rp: number;
-  note: string;
-}
-
-export interface EconomicsScenario {
-  status: BackendStatus | string;
-  status_data?: BackendStatus | string | null;
-  perspective: string;
-  rice_revenue_rp: number | null;
-  conventional_rice_revenue_rp: number | null;
-  delta_rice_value_rp: number | null;
-  duck_revenue_rp: number;
-  duck_purchase_cost_rp: number | null;
-  duck_purchase_price_rp_per_duck?: number | null;
-  duck_purchase_price_source?: string | null;
-  duck_purchase_price_status?: BackendStatus | string | null;
-  duck_purchase_price_requires_actual?: boolean;
-  feed_cost_rp: number | null;
-  feed_cost_status: BackendStatus | string;
-  duck_net_value_rp: number | null;
-  infrastructure: EconomicsInfrastructure;
-  penalty_yield_rp: number | null;
-  penalty_feed_rp: number | null;
-  net_profit_rp: number | null;
-  net_profit_rp_per_are: number | null;
-  missing_parameters: string[];
-  sumber_data: string;
-  data_readiness?: BackendStatus | string | null;
-  formula_available?: boolean;
-  numeric_ready?: boolean | null;
-  q_feed_source?: string | null;
-  q_feed_status?: BackendStatus | string | null;
-  q_feed_assumption_note?: string | null;
-  v_duck_xiong_reference?: number | null;
-  v_duck_xiong_model_value?: number | null;
-  v_duck_xiong_status?: BackendStatus | string;
-  additional_cost: number;
-}
-
-export interface EconomicsBlock {
-  status: BackendStatus | string;
-  actual: EconomicsScenario;
-  recommended: EconomicsScenario;
-  delta_profit_rp: number | null;
-  assumptions: string[];
-}
-
-export interface SoilNutrientsBlock {
-  status: BackendStatus | string;
-  n_kg_per_ha: number | null;
-  p2o5_kg_per_ha: number | null;
-  k2o_kg_per_ha: number | null;
-  n_kg_per_are: number | null;
-  p2o5_kg_per_are: number | null;
-  k2o_kg_per_are: number | null;
-  n_total_kg: number | null;
-  p2o5_total_kg: number | null;
-  k2o_total_kg: number | null;
-  missing_parameters: string[];
-}
-
-export interface EcologyScenario {
-  status: BackendStatus | string;
-  fertilizer_saving_rp: number;
-  fertilizer_saving_raw_rp: number;
-  fertilizer_saving_status: BackendStatus | string;
-  pesticide_herbicide_saving_rp: number | null;
-  pesticide_herbicide_saving_status: BackendStatus | string;
-  weed_reduction_rate: number;
-  weeding_saving_rp: number;
-  weeding_saving_status: BackendStatus | string;
-  partial_ecological_value_rp: number;
-  total_ecological_value_rp: number | null;
-  included_components: string[];
-  missing_parameters: string[];
-  soil_nutrients: SoilNutrientsBlock;
-}
-
-export interface EcologyBlock {
-  status: BackendStatus | string;
-  actual: EcologyScenario;
-  recommended: EcologyScenario;
-  assumptions: string[];
-}
-
-export interface EnvironmentScenario {
-  status: BackendStatus | string;
-  calibration_note: string;
-  co2e_kg_per_ha_season?: number | null;
-  ghgi_kg_co2e_per_kg_yield?: number | null;
-  ch4_reduction_percent?: number | null;
-  y_ch4_do_model?: number | null;
-  missing_parameters: string[];
-  sumber_data: string;
-  status_data?: BackendStatus | string | null;
-  catatan_kalibrasi?: string | null;
-  data_readiness?: BackendStatus | string | null;
-  formula_available?: boolean;
-  numeric_ready?: boolean | null;
-  co2e_are?: number | null;
-  f_ch4_are?: number | null;
-  f_n2o_are?: number | null;
-  ghgi?: number | null;
-  ch4_reduction_pct?: number | null;
-  co2e_ha_note?: number | null;
-  f_ch4_ha_note?: number | null;
-  f_n2o_ha_note?: number | null;
-}
-
-export interface EnvironmentBlock {
-  status: BackendStatus | string;
-  actual: EnvironmentScenario;
-  recommended: EnvironmentScenario;
-  assumptions: string[];
-}
-
-export interface ValidationBlock {
-  input_valid: boolean;
-  constraint_violations: string[];
-  warnings: string[];
-  missing_parameters: string[];
-}
-
-export interface DataReadinessBlock {
-  agronomy_ready: BackendStatus | string;
-  yield_ready: BackendStatus | string;
-  economics_ready: BackendStatus | string;
-  ecology_ready: BackendStatus | string;
-  environment_ready: BackendStatus | string;
-  overall_status: BackendStatus | string;
-}
-
-export interface DssSimulationResponse {
-  history_id: string | null;
-  input: DssSimulationRequest;
-  lookup: {
-    rice_variety: {
-      code: string;
-      label: string;
-      hst_masuk: number;
-      hst_heading: number;
-      harvest_age_days?: number;
-      status: BackendStatus | string;
-    };
-    planting_system: {
-      code: string;
-      label: string;
-      k_max_are: number;
-      f_yield: number;
-      k_max_status: BackendStatus | string;
-      f_yield_status: BackendStatus | string;
-    };
-    parameters: Record<string, LookupParameterMeta>;
-    [key: string]: unknown;
-  };
-  duck_age_assessment: DuckAgeAssessment;
-  duration_constraints: DurationConstraintSummary;
-  quality_output: QualityOutput;
-  actual_scenario: ActualScenario;
-  optimality_assessment: OptimalityAssessment;
-  recommended_scenario: RecommendedScenario | null;
-  comparison: ComparisonBlock | null;
-  risk: RiskBlock;
-  trace: Record<string, unknown>;
-  notes: string[];
-  economics: EconomicsBlock;
-  ecology: EcologyBlock;
-  environment: EnvironmentBlock;
-  validation: ValidationBlock;
-  data_readiness: DataReadinessBlock;
-}
+// Combined Response — matches backend DSSSimulationResponse exactly
+export interface DssSimulationResponse extends DssCoreOutput, DssSandboxOutput {}
 
 export interface HistoryListItem {
   id: string;
+  schema_version: number;
   created_at: string;
   summary: {
     rice_variety: string;
@@ -433,8 +171,7 @@ export interface HistoryListItem {
     duck_count: number;
     land_area_are: number;
     actual_density_are: number;
-    recommended_duck_count: number;
-    risk_status: string;
+    d_panen_gabah: string;
     estimated_total_yield_kg: number;
   };
 }

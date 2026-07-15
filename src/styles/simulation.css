@@ -1123,3 +1123,57 @@ details[open] .collapse-icon {
   max-width: 320px;
 }
 
+/* ── Two-Tier Visual Separation (SoT v2) ── */
+.sandbox-card {
+  border: 2px dashed var(--accent-amber) !important;
+  background: linear-gradient(135deg, rgba(245,158,11,0.03), rgba(245,158,11,0.01)) !important;
+}
+
+.sandbox-badge {
+  background: linear-gradient(135deg, var(--accent-amber), #f59e0b);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sandbox-note {
+  font-size: 11.5px;
+  color: var(--accent-amber);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.sandbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .sandbox-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .sandbox-grid { grid-template-columns: 1fr; }
+}
+
+.core-cash-card {
+  border: 1px solid rgba(34,197,94,0.25) !important;
+  background: linear-gradient(135deg, rgba(34,197,94,0.04), rgba(16,185,129,0.02)) !important;
+}
+
+.core-cash-badge {
+  background: rgba(34,197,94,0.12);
+  color: #15803d;
+  border: 1px solid rgba(34,197,94,0.25);
+}
+

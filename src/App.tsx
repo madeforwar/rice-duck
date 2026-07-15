@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Page } from "./types";
-import type { DssSimulationRequest, DssSimulationResponse } from "./types/api";
+import type { DssSimulationInputState, DssSimulationRequest, DssSimulationResponse } from "./types/api";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import Footer from "./components/Footer";
@@ -16,18 +16,8 @@ const DSS_DEFAULT_INPUT: DssSimulationRequest = {
   planting_date: "2026-06-01",
   rice_variety: "sertani",
   planting_system: "jajar_legowo",
-  duck_age_days: 30,
+  duck_age_days: 14,
   duck_buy_price_rp_per_duck: null,
-};
-
-// Extend type to allow temporary null for empty inputs
-type DssSimulationInputState = Omit<
-  DssSimulationRequest,
-  "duck_count" | "land_area_are" | "duck_age_days"
-> & {
-  duck_count: number | null;
-  land_area_are: number | null;
-  duck_age_days: number | null;
 };
 
 export default function App() {
